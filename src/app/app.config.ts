@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -10,7 +10,6 @@ import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient } from '@angular/common/http';
-
 registerLocaleData(zh);
 
 export const appConfig: ApplicationConfig = {
@@ -20,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes), 
     // ssr
     // provideClientHydration(withEventReplay()), 
-    provideNzIcons(icons), provideNzI18n(zh_CN), provideAnimationsAsync(), provideHttpClient()
+    provideNzIcons(icons), provideNzI18n(zh_CN), 
+    provideAnimationsAsync(), provideHttpClient(),
   ]
 };
