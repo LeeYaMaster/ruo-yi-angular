@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "nuoyi-admin": {
+    "ruoyi-admin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -63,10 +63,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "nuoyi-admin:build:production"
+              "buildTarget": "ruoyi-admin:build:production"
             },
             "development": {
-              "buildTarget": "nuoyi-admin:build:development"
+              "buildTarget": "ruoyi-admin:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -92,5 +92,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "e46b6111-a331-4cb4-a467-a62b3b189e88"
   }
 }
