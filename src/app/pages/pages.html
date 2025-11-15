@@ -1,46 +1,51 @@
 <nz-layout class="app-layout">
     <nz-sider class="menu-sidebar"
-      nzCollapsible
-      nzWidth="256px"
-      nzBreakpoint="md"
-      [(nzCollapsed)]="isCollapsed"
-      [nzTrigger]="null"
-    >
+              nzCollapsible
+              nzWidth="256px"
+              nzBreakpoint="md"
+              [(nzCollapsed)]="isCollapsed"
+              [nzTrigger]="null"
+              nzTheme="light">
       <div class="sidebar-logo">
         <a href="https://ng.ant.design/" target="_blank">
           <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
-          <h1>Ant Design of Angular</h1>
+          <h1>若依后台管理系统</h1>
         </a>
       </div>
-      <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-        <li nz-submenu nzOpen nzTitle="Dashboard" nzIcon="dashboard">
-          <ul>
-            <li nz-menu-item nzMatchRouter>
-              <a routerLink="/welcome">Welcome</a>
+      <ul nz-menu nzTheme="light" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+        <!-- <div *ngFor="let data of list">
+          <div *ngIf="(data.checked && (data.type == 1)) || (is_super == '1' && (data.type == 1))">
+            <li nz-submenu nzOpen nzMatchRouter [nzTitle]="data.module_name" [nzIcon]="data.icon">
+              <ul *ngFor="let item of data.items">
+                <div *ngIf="(item.checked && item.type!=3) || (is_super=='1' && item.type!=3)">
+                  <li nz-menu-item [routerLink]="item.url">{{item.action_name}}</li>
+                </div>
+              </ul>
             </li>
-            <li nz-menu-item nzMatchRouter>
-              <a>Monitor</a>
-            </li>
-            <li nz-menu-item nzMatchRouter>
-              <a>Workplace</a>
-            </li>
-          </ul>
-        </li>
-        <li nz-submenu nzOpen nzTitle="Form" nzIcon="form">
-          <ul>
-            <li nz-menu-item nzMatchRouter>
-              <a>Basic Form</a>
-            </li>
-          </ul>
-        </li>
+          </div>
+        </div> -->
       </ul>
     </nz-sider>
     <nz-layout>
       <nz-header>
-        <div class="app-header">
+        <div class="app-header" style="overflow: hidden">
           <span class="header-trigger" (click)="isCollapsed = !isCollapsed">
-            <nz-icon class="trigger" [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'" />
+              <i class="trigger"
+                 nz-icon
+                 [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"
+              ></i>
           </span>
+          <a nz-dropdown [nzDropdownMenu]="menu4" style="float: right;margin-right: 40px;">
+            <nz-avatar nzIcon="user" style="margin-right: 5px;" nzSize="small"
+                       nzSrc="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"></nz-avatar>
+            <!-- {{username}} -->
+            <i nz-icon nzType="down"></i>
+          </a>
+          <nz-dropdown-menu #menu4="nzDropdownMenu">
+            <ul nz-menu>
+              <li nz-menu-item (click)="exit()">退出登录</li>
+            </ul>
+          </nz-dropdown-menu>
         </div>
       </nz-header>
       <nz-content>
@@ -50,3 +55,5 @@
       </nz-content>
     </nz-layout>
   </nz-layout>
+  
+  

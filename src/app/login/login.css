@@ -1,0 +1,27 @@
+
+      .login-form {
+        max-width: 300px;
+      }
+
+      .login-form-margin {
+        margin-bottom: 16px;
+      }
+
+      .login-form-forgot {
+        float: right;
+      }
+
+      .login-form-button {
+        width: 100%;
+      }
+      [nz-button] {
+        margin-bottom: 12px;
+      }
+      .main{
+        height: 100%;
+        /* background: url("../../assets/bg.png") no-repeat; */
+        background-size: 100% 100%;
+        background-attachment: fixed;
+        -moz-background-size: 100% 100%;
+      }
+      
