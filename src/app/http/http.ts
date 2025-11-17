@@ -3,34 +3,35 @@ import {NzMessageService} from 'ng-zorro-antd/message';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Config} from './config';
 import {Router} from '@angular/router';
-import qs from 'qs';
+import { Observable } from 'rxjs';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class baseHttp {
   constructor(
-    public msg: NzMessageService, 
+    // public msg: NzMessageService, 
     public httpClient: HttpClient, 
     private router: Router) {
 
   }
 
-  // public async get(url: string, data: object) {
-  //   const result: object = await this.httpClient.get(Config.API_URL + url, {
-  //     params: {
-  //       ...data
-  //     },
-  //     headers: {
-  //       'content-type': 'application/x-www-form-urlencoded'
-  //     }
-  //   });
-  //   if (result.data.msg === '您没有权限访问当前地址') {
-  //     this.msg.error(result.data.msg);
-  //   }
-  //   if (result.data.msg === '请您登录') {
-  //     this.msg.error('Session过期，请重新登录');
-  //     this.router.navigate(['login']);
-  //   }
-  //   return result;
+  public get(url: string, data: object): Observable<any> {
+    return this.httpClient.get(Config.API_URL + url, {
+      params: {
+        ...data
+      },
+    });
+  }
+  // headers: {
+  //   'content-type': 'application/x-www-form-urlencoded'
+  // }
+  // if (result.data.msg === '您没有权限访问当前地址') {
+  //   this.msg.error(result.data.msg);
+  // }
+  // if (result.data.msg === '请您登录') {
+  //   this.msg.error('Session过期，请重新登录');
+  //   this.router.navigate(['login']);
   // }
 
   // public async post(url: string, data: object) {

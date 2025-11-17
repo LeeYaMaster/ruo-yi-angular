@@ -16,16 +16,19 @@
       </nz-input-password>
     </nz-form-control>
   </nz-form-item>
-  <div nz-row class="login-form-margin">
-    <div nz-col [nzSpan]="12">
-      <label nz-checkbox formControlName="remember">
-        <span>Remember me</span>
-      </label>
-    </div>
-    <div nz-col [nzSpan]="12">
-      <a class="login-form-forgot">Forgot password</a>
-    </div>
-  </div>
+  <nz-form-item>
+    <nz-form-control nzErrorTip="Please input the verification code!">
+      <div nz-row class="login-form-margin" style="align-items:center;">
+        <div nz-col [nzSpan]="16">
+          <input type="text" nz-input formControlName="captcha" placeholder="Verification Code" />
+        </div>
+        <div nz-col [nzSpan]="8">
+          <!-- 换成你自己的验证码图片或组件 -->
+          <img [src]="captchaUrl" style="height:32px;cursor:pointer;" (click)="refreshCaptcha()" alt="captcha" />
+        </div>
+      </div>
+    </nz-form-control>
+  </nz-form-item>
   <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
   Or
   <a>register now!</a>

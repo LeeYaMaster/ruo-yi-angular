@@ -1,9 +1,9 @@
 {
-    "/api": {
+    "/dev-api": {
       "target": "http://localhost:7002",
       "secure": false,                   
       "changeOrigin": true,             
       "logLevel": "debug",               
-      "pathRewrite": { "^/api": "" }     
+      "pathRewrite": { "^/dev-api": "" }     
     }
   }
