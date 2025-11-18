@@ -37,12 +37,18 @@
     @for (item of formConfig; track item.name) {
         <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
             @if (item.type === 'input') {
-                <nz-form-control [nzErrorTip]="item.rules?.[0]?.error">
+                <nz-form-control 
+                  [nzErrorTip]="getErrorTip">
                     <nz-input-wrapper>
                         <nz-icon nzInputPrefix nzType="user" />
                         <input type="text" nz-input formControlName="{{item.name}}" placeholder="{{item.placeholder}}" />
                     </nz-input-wrapper>
                 </nz-form-control>
+                <ng-template #getErrorTip let-control>
+                    @for (rule of item.rules; track rule.key) {
+                        <ng-container [ngIf]="control.hasError(rule.key)">{{rule.error}}</ng-container>
+                    }
+                </ng-template>
             }
         </nz-form-item>
     }

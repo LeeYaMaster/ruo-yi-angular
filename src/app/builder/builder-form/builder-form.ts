@@ -1,23 +1,17 @@
 import { Component, inject, Input } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-
 import { Captcha } from '../../custom-form/captcha/captcha';
 import { FormConfig } from './builder-form.model';
-
-
-
-
-
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-builder-form',
   imports: [ReactiveFormsModule, NzButtonModule, 
-    NzCheckboxModule, NzFormModule, NzInputModule, Captcha],
+    NzCheckboxModule, NzFormModule, NzInputModule, Captcha, CommonModule],
   templateUrl: './builder-form.html',
   styleUrl: './builder-form.less',
 })
@@ -39,29 +33,6 @@ export class BuilderForm {
     });
   }
 
-  // validateForm = this.fb.group({
-  //   username: this.fb.control('', [Validators.required]),
-  //   password: this.fb.control('', [Validators.required]),
-  //   captcha: this.fb.control('', [Validators.required])
-  // });
-
-  // captchaUrl = ""
-  // submitForm(): void {
-  //   if (this.validateForm.valid) {
-  //     console.log('submit', this.validateForm.value);
-  //   } else {
-  //     Object.values(this.validateForm.controls).forEach(control => {
-  //       if (control.invalid) {
-  //         control.markAsDirty();
-  //         control.updateValueAndValidity({ onlySelf: true });
-  //       }
-  //     });
-  //   }
-  // }
-
-
-
-
   submitForm(): void {
     if (this.validateForm.valid) {
       // 过滤掉 when 不满足的项，只保留展示的项数据
@@ -72,6 +43,7 @@ export class BuilderForm {
       );
       console.log('submit', filteredValue);
     } else {
+      console.log('validateForm', this.validateForm);
       Object.values(this.validateForm.controls).forEach((control: any) => {
         if (control.invalid) {
           control.markAsDirty();
@@ -80,5 +52,4 @@ export class BuilderForm {
       });
     }
   }
-
 }

@@ -18,12 +18,14 @@ export class Welcome {
       placeholder: 'Enter your name',
       rules: [
         { 
-          validator: Validators.required, 
+          validator: Validators.required,
+          key: 'required',
           error: 'Please input your name' 
         },
         { 
-          validator: Validators.minLength(3), 
-          error: 'Name must be at least 3 characters' 
+          validator: Validators.maxLength(3), 
+          key: 'maxlength',
+          error: 'Name must be at most 3 characters' 
         }
       ],
       value: ''
