@@ -1,0 +1,50 @@
+<!-- <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
+    <nz-form-item>
+      <nz-form-control nzErrorTip="Please input your username!">
+        <nz-input-wrapper>
+          <nz-icon nzInputPrefix nzType="user" />
+          <input type="text" nz-input formControlName="username" placeholder="Username" />
+        </nz-input-wrapper>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-control nzErrorTip="Please input your Password!">
+        <nz-input-password>
+          <nz-icon nzInputPrefix nzType="lock" />
+          <input nz-input formControlName="password" placeholder="Password" />
+        </nz-input-password>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-control nzErrorTip="Please input the verification code!">
+        <div nz-row class="login-form-margin" style="align-items:center;">
+          <div nz-col [nzSpan]="16">
+            <input type="text" nz-input formControlName="captcha" placeholder="Verification Code" />
+          </div>
+          <div nz-col [nzSpan]="8">
+            <div style="width: 100px; height: 32px; display: flex; align-items: center;">
+              <app-captcha></app-captcha>
+            </div>
+          </div>
+        </div>
+      </nz-form-control>
+    </nz-form-item>
+    <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
+  </form> -->
+
+  
+  <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
+    @for (item of formConfig; track item.name) {
+        <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
+            @if (item.type === 'input') {
+                <nz-form-control [nzErrorTip]="item.rules?.[0]?.error">
+                    <nz-input-wrapper>
+                        <nz-icon nzInputPrefix nzType="user" />
+                        <input type="text" nz-input formControlName="{{item.name}}" placeholder="{{item.placeholder}}" />
+                    </nz-input-wrapper>
+                </nz-form-control>
+            }
+        </nz-form-item>
+    }
+    <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
+  </form>

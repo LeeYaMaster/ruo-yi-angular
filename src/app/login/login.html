@@ -1,36 +1,3 @@
 <div class="main">
-<form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
-  <nz-form-item>
-    <nz-form-control nzErrorTip="Please input your username!">
-      <nz-input-wrapper>
-        <nz-icon nzInputPrefix nzType="user" />
-        <input type="text" nz-input formControlName="username" placeholder="Username" />
-      </nz-input-wrapper>
-    </nz-form-control>
-  </nz-form-item>
-  <nz-form-item>
-    <nz-form-control nzErrorTip="Please input your Password!">
-      <nz-input-password>
-        <nz-icon nzInputPrefix nzType="lock" />
-        <input nz-input formControlName="password" placeholder="Password" />
-      </nz-input-password>
-    </nz-form-control>
-  </nz-form-item>
-  <nz-form-item>
-    <nz-form-control nzErrorTip="Please input the verification code!">
-      <div nz-row class="login-form-margin" style="align-items:center;">
-        <div nz-col [nzSpan]="16">
-          <input type="text" nz-input formControlName="captcha" placeholder="Verification Code" />
-        </div>
-        <div nz-col [nzSpan]="8">
-          <!-- 换成你自己的验证码图片或组件 -->
-          <img [src]="captchaUrl" style="height:32px;cursor:pointer;" (click)="refreshCaptcha()" alt="captcha" />
-        </div>
-      </div>
-    </nz-form-control>
-  </nz-form-item>
-  <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
-  Or
-  <a>register now!</a>
-</form>
+  <app-builder-form></app-builder-form>
 </div>
