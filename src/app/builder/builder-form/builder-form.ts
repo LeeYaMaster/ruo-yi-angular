@@ -21,6 +21,28 @@ export class BuilderForm {
   validateForm = this.fb.group({});
   customValidators: any;
 
+  // 监听页面值变化，根据 when 过滤对应验证器
+  ngAfterViewInit(): void {
+    this.validateForm.valueChanges.subscribe(formValue => {
+      this.formConfig.forEach(item => {
+        const control = this.validateForm.get(item.name);
+        if (!control) return;
+        const show = !item.when || item.when(formValue);
+        if (show) {
+          // 如果应该显示，确保有校验规则
+          const validators = Array.isArray(item.rules)
+            ? item.rules.map(rule => this.mapRule(rule))
+            : [];
+          control.setValidators(validators);
+        } else {
+          // 如果不显示，移除所有校验规则，并清空错误
+          control.clearValidators();
+          control.setErrors(null);
+        }
+        control.updateValueAndValidity({ onlySelf: true });
+      });
+    });
+  }
 
   ngOnInit(): void {
     console.log(this.formConfig);
