@@ -18,15 +18,14 @@ export class Welcome {
       placeholder: 'Enter your name',
       rules: [
         { 
-          validator: Validators.required,
-          key: 'required',
+          type: 'required',
           error: 'Please input your name' 
         },
-        { 
-          validator: Validators.maxLength(3), 
-          key: 'maxlength',
-          error: 'Name must be at most 3 characters' 
-        }
+        // { 
+        //   type: 'minLength',
+        //   error: 'Name must be at least 3 characters',
+        //   len: 3
+        // },
       ],
       value: ''
     },{
@@ -34,7 +33,12 @@ export class Welcome {
       type: 'input',
       label: 'Age',
       placeholder: 'Enter your age',
-      when: (form: any) => form.name === '1'
+      when: (form: any) => form.name === '1',
+      rules: [
+        { type: "required", error: "Please input your age" },
+        // { type: "range", value: [18, 30], error: "age must be between 18 and 30" },
+        // { type: "custom", validator: "noFloat", error: "cannot input decimal" }
+      ]
     },{
       name: 'sex',
       type: 'input',

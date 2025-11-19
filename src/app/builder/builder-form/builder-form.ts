@@ -1,5 +1,5 @@
 import { Component, inject, Input } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NonNullableFormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -19,20 +19,40 @@ export class BuilderForm {
   @Input() formConfig: FormConfig = [];
   private fb = inject(NonNullableFormBuilder);
   validateForm = this.fb.group({});
+  customValidators: any;
 
 
   ngOnInit(): void {
     console.log(this.formConfig);
     
     this.formConfig.forEach(item => {
-      // 之前代码未正确提取 validator，应为 rule.validator
       const validators = Array.isArray(item.rules)
-        ? item.rules.map(rule => rule.validator)
+        ? item.rules.map(rule => this.mapRule(rule))
         : [];
       this.validateForm.addControl(item.name, this.fb.control(item.value ?? '', validators));
     });
   }
-
+  // todo 自定义验证器，range，len，双验证器
+  mapRule(rule: any): ValidatorFn {
+    switch (rule.type) {
+      case 'required':
+        return Validators.required;
+      case 'minLength':
+        return Validators.minLength(rule.len);
+      case 'maxLength':
+        return Validators.maxLength(rule.len);
+      // case 'range':
+      //   return (Validators.compose([
+      //     Validators.min(rule.value[0]),
+      //     Validators.max(rule.value[1])
+      //   ]) ?? Validators.nullValidator);
+      // case 'custom':
+      //   return this.customValidators[rule.validator!]; // 运行时注入
+      default:
+        return Validators.nullValidator;
+    }
+  }
+  
   submitForm(): void {
     if (this.validateForm.valid) {
       // 过滤掉 when 不满足的项，只保留展示的项数据

@@ -32,25 +32,30 @@
     <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
   </form> -->
 
-  
-  <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
-    @for (item of formConfig; track item.name) {
-        <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
-            @if (item.type === 'input') {
-                <nz-form-control 
-                  [nzErrorTip]="getErrorTip">
-                    <nz-input-wrapper>
-                        <nz-icon nzInputPrefix nzType="user" />
-                        <input type="text" nz-input formControlName="{{item.name}}" placeholder="{{item.placeholder}}" />
-                    </nz-input-wrapper>
-                </nz-form-control>
-                <ng-template #getErrorTip let-control>
-                    @for (rule of item.rules; track rule.key) {
-                        <ng-container [ngIf]="control.hasError(rule.key)">{{rule.error}}</ng-container>
-                    }
-                </ng-template>
-            }
-        </nz-form-item>
+<form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
+  @for (item of formConfig; track item.name) {
+  <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
+    @if (item.type === 'input') {
+    <nz-form-control [nzErrorTip]="getErrorTip">
+      <nz-input-wrapper>
+        <nz-icon nzInputPrefix nzType="user" />
+        <input
+          type="text"
+          nz-input
+          formControlName="{{ item.name }}"
+          placeholder="{{ item.placeholder }}"
+        />
+      </nz-input-wrapper>
+    </nz-form-control>
+    <ng-template #getErrorTip let-control>
+      @for (rule of item.rules; track rule.type) {
+      <ng-container *ngIf="control.hasError(rule.type)">
+        <span>{{ rule.error }}</span><br />
+      </ng-container>
+      }
+    </ng-template>
     }
-    <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
-  </form>
+  </nz-form-item>
+  }
+  <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
+</form>
