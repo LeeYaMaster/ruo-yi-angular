@@ -35,7 +35,7 @@
 <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
   @for (item of formConfig; track item.name) {
   <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
-    @if (item.type === 'input') {
+    @if (item.component === 'input') {
     <nz-form-control [nzErrorTip]="getErrorTip">
       <nz-input-wrapper>
         <nz-icon nzInputPrefix nzType="user" />
@@ -48,10 +48,8 @@
       </nz-input-wrapper>
     </nz-form-control>
     <ng-template #getErrorTip let-control>
-      @for (rule of item.rules; track rule.type) {
-      <ng-container *ngIf="control.hasError(rule.type)">
-        <span>{{ rule.error }}</span><br />
-      </ng-container>
+      @for (errorMessage of getErrorsMessage(control, item.errorMessage); track errorMessage) {
+      <span>{{ errorMessage }}</span>
       }
     </ng-template>
     }

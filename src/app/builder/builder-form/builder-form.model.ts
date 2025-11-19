@@ -14,22 +14,40 @@ import { ValidatorFn } from "@angular/forms";
 // | `blacklist?` | `string[]`         | 黑名单枚举                                   | 自定义 validator                                         |
 // | `validator?` | `string`           | 扩展：运行时注入的**函数名**（保持 JSON 可序列化）          | `this.customValidators[validator]`                    |
 
-export type RulesKey = 'required' | 'minLength' | 'maxLength' | 'range' | 'custom'
+// 内置验证器返回的 key 集合（官方文档枚举）
+type BuiltInErrorKey =
+  | 'required'
+  | 'email'
+  | 'min'
+  | 'max'
+  | 'minlength'
+  | 'maxlength'
+  | 'pattern'
+  | 'nullValidator';
+export type RulesKey = BuiltInErrorKey | 'custom';
 
+// export type ErrorMessage = Record<RulesKey, string>;
+export type ErrorMessage = {
+  [key in RulesKey]?: string;
+};
 export type FormConfigItem = {
     name: string;
-    type: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea';
+    component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea';
     label: string;
     placeholder: string;
     rules?: {
-      type: RulesKey;
-      error: string;
-    //   len?: number;
-    //   value?: number | string | [number, number];
-    //   validator? : string;
-    }[];
-    value?: any;
+      [key in RulesKey]?: boolean | number | string[];
+    };
+    errorMessage?: ErrorMessage;
+    defaultValue?: any;
     when?: (form: any) => boolean;
   };
   
 export type FormConfig = FormConfigItem[];
+
+export type GroupValidator = {
+  name: string;
+  validator: string;
+  fields: string[];
+  message: string;
+};
