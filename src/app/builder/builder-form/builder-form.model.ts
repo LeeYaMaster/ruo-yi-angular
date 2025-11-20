@@ -28,8 +28,10 @@ export type RulesKey = BuiltInErrorKey | 'custom';
 
 // export type ErrorMessage = Record<RulesKey, string>;
 export type ErrorMessage = {
-  [key in RulesKey]?: string;
+  // [key in RulesKey]?: string;
+  [key: string]: string;
 };
+
 export type FormConfigItem = {
     name: string;
     component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea';
@@ -49,5 +51,6 @@ export type GroupValidator = {
   name: string;
   validator: string;
   fields: string[];
+  errorKey: string;
   message: string;
 };

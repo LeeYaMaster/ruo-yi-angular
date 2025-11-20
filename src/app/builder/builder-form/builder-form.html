@@ -48,12 +48,17 @@
       </nz-input-wrapper>
     </nz-form-control>
     <ng-template #getErrorTip let-control>
-      @for (errorMessage of getErrorsMessage(control, item.errorMessage); track errorMessage) {
+      @for (errorMessage of getControlErrorsMessage(control, item.errorMessage); track errorMessage)
+      {
       <span>{{ errorMessage }}</span>
       }
     </ng-template>
     }
   </nz-form-item>
   }
+  <!-- Form Errors -->
+  <div style="color: #ff4d4f">
+    {{ getFormErrorsMessage() }}
+  </div>
   <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
 </form>

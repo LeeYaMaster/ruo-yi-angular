@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { BuilderForm } from '../../builder/builder-form/builder-form';
-import { FormConfig } from '../../builder/builder-form/builder-form.model';
+import { FormConfig, GroupValidator } from '../../builder/builder-form/builder-form.model';
 import { Validators } from '@angular/forms';
 
 @Component({
@@ -54,32 +54,37 @@ export class Welcome {
     // pattern
     // validateTrigger: 'blur',
     // asyncValidator: 'remoteUnique',   // 运行时注入
-    {
-      name: 'password',
-      component: 'input',
-      label: 'Password',
-      placeholder: 'Enter your password',
-      rules: {
-        required: true,
-      },
-    },
-    {
-      name: 'confirmPassword',
-      component: 'input',
-      label: 'Confirm Password',
-      placeholder: 'Enter your confirm password',
-      rules: {
-        required: true,
-      },
-    },
+    // {
+    //   name: 'password',
+    //   component: 'input',
+    //   label: 'Password',
+    //   placeholder: 'Enter your password',
+    //   rules: {
+    //     required: true,
+    //   },
+    // },
+    // {
+    //   name: 'confirmPassword',
+    //   component: 'input',
+    //   label: 'Confirm Password',
+    //   placeholder: 'Enter your confirm password',
+    //   rules: {
+    //     required: true,
+    //     custom: ['confirmMismatch']
+    //   },
+    //   errorMessage: {
+    //     mismatch: 'The two passwords do not match',
+    //   }
+    // },
   ];
   // ****** 整组交叉校验 ****** 
-  groupValidators = [
-    {
-      name: 'confirmMismatch',          // 规则名
-      validator: 'confirmPassword',     // 运行时注入的函数名
-      fields: ['password', 'confirmPassword'], // 依赖字段
-      message: 'The two passwords do not match' // 整组报错文案
-    }
-  ]
+  // groupValidators: GroupValidator[] = [
+  //   {
+  //     name: 'confirmMismatch',          // 规则名
+  //     validator: 'confirmPassword',     // 运行时注入的函数名
+  //     fields: ['password', 'confirmPassword'], // 依赖字段
+  //     errorKey: 'mismatch',
+  //     message: 'The two passwords do not match' // 整组报错文案
+  //   }
+  // ]
 }

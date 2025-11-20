@@ -1,4 +1,4 @@
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 /**
  * 大陆手机号同步验证器
@@ -12,3 +12,13 @@ export const phoneValidator = (): ValidatorFn => {
     return phoneReg.test(value) ? null : { phone: true };
   };
 };
+
+/* ****** 交叉校验函数 ****** */
+export const confirmPasswordValidator = (passwordField: string, confirmField: string): any => {
+  return (form: FormGroup) => {
+    const pass = form.get(passwordField)?.value;
+    const confirm = form.get(confirmField)?.value;
+    if (!pass || !confirm) return null;
+    return pass === confirm ? null : { mismatch: true };
+  };
+}
