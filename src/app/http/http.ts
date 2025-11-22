@@ -34,20 +34,11 @@ export class baseHttp {
   //   this.router.navigate(['login']);
   // }
 
-  // public async post(url: string, data: object) {
-  //   const d = qs.stringify(data);
-  //   const result: object = await this.httpClient.post(Config.API_URL + url, d, {
-  //     headers: {'content-type': 'application/x-www-form-urlencoded'},
-  //   });
-  //   if (result.data.msg === '您没有权限访问当前地址') {
-  //     this.msg.error(result.data.msg);
-  //   }
-  //   if (result.data.msg === '请您登录') {
-  //     this.msg.error('Session过期，请重新登录');
-  //     this.router.navigate(['login']);
-  //   }
-  //   return result;
-  // }
+  public post(url: string, data: object) {
+    return this.httpClient.post(Config.API_URL + url, data, {
+      // headers: {'content-type': 'application/x-www-form-urlencoded'},
+    });
+  }
 
   // public async put(url: string, data: object) {
   //   // put 有问题，参数不能在url上面。

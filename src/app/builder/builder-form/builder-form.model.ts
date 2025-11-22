@@ -1,3 +1,4 @@
+import { Component, Type } from "@angular/core";
 import { ValidatorFn } from "@angular/forms";
 
 // rules
@@ -34,7 +35,8 @@ export type ErrorMessage = {
 
 export type FormConfigItem = {
     name: string;
-    component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea';
+    component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea' | 'password' | 'custom';
+    customComponent?: Type<any>;
     label: string;
     placeholder: string;
     rules?: {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, Output } from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -10,11 +10,11 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { Captcha } from '../../custom-form/captcha/captcha';
 import { ErrorMessage, FormConfig, GroupValidator, RulesKey } from './builder-form.model';
 import { CommonModule } from '@angular/common';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { confirmPasswordValidator, phoneValidator } from './builder-form.validators';
+
 
 @Component({
   selector: 'app-builder-form',
@@ -24,15 +24,16 @@ import { confirmPasswordValidator, phoneValidator } from './builder-form.validat
     NzCheckboxModule,
     NzFormModule,
     NzInputModule,
-    Captcha,
     CommonModule,
   ],
   templateUrl: './builder-form.html',
   styleUrl: './builder-form.less',
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BuilderForm {
   @Input() formConfig: FormConfig = [];
   @Input() groupValidators: GroupValidator[] = [];
+  @Output() submitFormEvent = new EventEmitter<any>();
   private fb = inject(NonNullableFormBuilder);
   private notification = inject(NzNotificationService);
   validateForm = this.fb.group({});
@@ -128,6 +129,7 @@ export class BuilderForm {
           .map((item) => [item.name, (this.validateForm.value as any)[item.name]])
       );
       console.log('submit', filteredValue);
+      this.submitFormEvent.emit(filteredValue);
     } else {
       console.log('validateForm', this.validateForm);
       Object.entries(this.validateForm.controls).forEach(([key, control]: [string, any]) => {

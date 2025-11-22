@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { BuilderForm } from '../../builder/builder-form/builder-form';
 import { FormConfig, GroupValidator } from '../../builder/builder-form/builder-form.model';
 import { Validators } from '@angular/forms';
+import { Subject, BehaviorSubject, ReplaySubject, AsyncSubject, of, delay, concatMap, mergeMap, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-welcome',
@@ -77,7 +78,7 @@ export class Welcome {
     //   }
     // },
   ];
-  // ****** 整组交叉校验 ****** 
+  // ****** 整组交叉校验 ******
   // groupValidators: GroupValidator[] = [
   //   {
   //     name: 'confirmMismatch',          // 规则名
@@ -87,4 +88,41 @@ export class Welcome {
   //     message: 'The two passwords do not match' // 整组报错文案
   //   }
   // ]
+
+  ngOnInit(): void {
+    // const s$ = new Subject(); // 1
+    // const b$ = new BehaviorSubject(0); // 2
+    // const r$ = new ReplaySubject(5); // 3
+    // const a$ = new AsyncSubject(); // 4
+
+    // 先发射一些值
+    // [s$, b$, r$, a$].forEach(($) => $.next(1));
+    // [s$, b$, r$, a$].forEach(($) => $.next(2));
+    
+    // 晚订阅
+    
+    // [a$].forEach(($) => $.next(1));
+    // [a$].forEach(($) => $.next(2));
+    // r$.subscribe((v) => console.log('Replay', v));
+    // [a$].forEach(($) => $.next(3));
+    // [s$].forEach(($) => $.next(2));
+    // [s$].forEach(($) => $.next(3));
+    // b$.subscribe((v) => console.log('Behavior', v));
+    // r$.subscribe((v) => console.log('Replay', v));
+    // a$.subscribe((v) => console.log('Async', v));
+
+    // 手动完成
+    // [s$, b$, r$, a$].forEach(($) => $.complete());
+    // [a$].forEach(($) => $.complete());
+
+    // const outer$ = of('A', 'B', 'C');          // 每 0 ms
+    // const inner = (letter: string) =>
+    //   of(letter, letter, letter).pipe(delay(100)); // 每 100 ms
+    // // 1. 排队（串行）
+    // outer$.pipe(concatMap(inner)).subscribe(v => console.log('concat', v));
+    // // 2. 全开（并发）
+    // outer$.pipe(mergeMap(inner)).subscribe(v => console.log('merge', v));
+    // // 3. 切换（最新保留）
+    // outer$.pipe(switchMap(inner)).subscribe(v => console.log('switch', v));
+  }
 }

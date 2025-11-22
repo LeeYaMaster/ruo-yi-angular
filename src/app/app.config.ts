@@ -11,6 +11,7 @@ import zh from '@angular/common/locales/zh';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './http/auth.interceptor';
+import { SafeHtmlPipe } from './pipe/safe-html.pipe';
 registerLocaleData(zh);
 
 export const appConfig: ApplicationConfig = {
@@ -23,5 +24,6 @@ export const appConfig: ApplicationConfig = {
     provideNzIcons(icons), provideNzI18n(zh_CN), 
     provideAnimationsAsync(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    SafeHtmlPipe
   ]
 };
