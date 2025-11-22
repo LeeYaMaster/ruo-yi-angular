@@ -13,17 +13,28 @@
         </a>
       </div>
       <ul nz-menu nzTheme="light" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-        <!-- <div *ngFor="let data of list">
-          <div *ngIf="(data.checked && (data.type == 1)) || (is_super == '1' && (data.type == 1))">
-            <li nz-submenu nzOpen nzMatchRouter [nzTitle]="data.module_name" [nzIcon]="data.icon">
-              <ul *ngFor="let item of data.items">
-                <div *ngIf="(item.checked && item.type!=3) || (is_super=='1' && item.type!=3)">
-                  <li nz-menu-item [routerLink]="item.url">{{item.action_name}}</li>
-                </div>
+        @for(menu of list; track menu.path) {
+          @if(!menu.hidden) {
+          <li nz-submenu nzMatchRouter [nzTitle]="menu.meta?.title" [nzIcon]="menu.meta?.icon" [nzOpen]="false">
+            @if(menu.children && menu.children.length > 0) {
+              <ul>
+                @for(child of menu.children; track child.path) {
+                  @if(!child.hidden) {
+                    <li nz-menu-item [routerLink]="child.path" [queryParams]="child.query ? (child.query) : null">
+                      <span>{{ child.meta?.title }}</span>
+                    </li>
+                  }
+                }
               </ul>
-            </li>
-          </div>
-        </div> -->
+            }
+            @else {
+              <li nz-menu-item [routerLink]="menu.path" [queryParams]="menu.query ? (menu.query) : null">
+                <span>{{ menu.meta?.title }}</span>
+              </li>
+            }
+          </li>
+          }
+        }
       </ul>
     </nz-sider>
     <nz-layout>

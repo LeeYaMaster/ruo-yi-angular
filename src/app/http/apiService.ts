@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { baseHttp } from './http';
+import { inject, Injectable } from '@angular/core';
+import { BaseHttp } from './http';
 
 /**
  * 用户登录服务
@@ -7,7 +7,7 @@ import { baseHttp } from './http';
 
 @Injectable()
 export class ApiService {
-  constructor(private http: baseHttp) {}
+  http = inject(BaseHttp);
   // // 上传
   // uploadImg(data, callbackFun) {
   //   this.http.upload('admin/upload/file',

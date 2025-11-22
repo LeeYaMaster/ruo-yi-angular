@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class baseHttp {
+export class BaseHttp {
   constructor(
     // public msg: NzMessageService, 
     public httpClient: HttpClient, 

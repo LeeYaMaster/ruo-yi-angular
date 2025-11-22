@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { baseHttp } from '../http/http';
+import { inject, Injectable } from '@angular/core';
+import { BaseHttp } from '../http/http';
 import { Observable } from 'rxjs';
 
 export interface requestLogin {
@@ -22,7 +22,7 @@ export interface responseLogin {
   providedIn: 'root',
 })
 export class LoginApiService {
-  constructor(private baseHttp: baseHttp) {}
+  baseHttp = inject(BaseHttp);
   login(data: requestLogin): Observable<responseLogin> {
     return this.baseHttp.post('login', data) as Observable<responseLogin>;
   }

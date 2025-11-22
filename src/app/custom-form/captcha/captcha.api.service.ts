@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { baseHttp } from '../../http/http';
+import { inject, Injectable } from '@angular/core';
+import { BaseHttp } from '../../http/http';
 @Injectable({
   providedIn: 'root',
 })
 export class CaptchaApiService {
-  constructor(private baseHttp: baseHttp) {}
+  baseHttp = inject(BaseHttp);
   getCode() {
     return this.baseHttp.get('captchaImage', {});
   }
