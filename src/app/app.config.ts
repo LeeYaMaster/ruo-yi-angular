@@ -11,6 +11,8 @@ import zh from '@angular/common/locales/zh';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './http/auth.interceptor';
+import { responseInterceptor } from './http/response.interceptor';
+import { errorInterceptor } from './http/error.interceptor';
 import { SafeHtmlPipe } from './pipe/safe-html.pipe';
 registerLocaleData(zh);
 
@@ -23,7 +25,9 @@ export const appConfig: ApplicationConfig = {
     // provideClientHydration(withEventReplay()), 
     provideNzIcons(icons), provideNzI18n(zh_CN), 
     provideAnimationsAsync(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    // 注意：拦截器的执行顺序是从左到右
+    // authInterceptor -> responseInterceptor -> errorInterceptor
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, responseInterceptor, errorInterceptor])),
     SafeHtmlPipe
   ]
 };

@@ -11,11 +11,14 @@ import { Operlog } from './dashboard/system/log/operlog/operlog';
 import { Dept } from './dashboard/system/dept/dept';
 import { Config } from './dashboard/system/config/config';
 import { Notice } from './dashboard/system/notice/notice';    
+import { Post } from './dashboard/system/post/post';
+
 import { Cache } from './dashboard/monitor/cache/cache';
 import { CacheList } from './dashboard/monitor/cache-list/cache-list';
 import { Job } from './dashboard/monitor/job/job';
 import { Online } from './dashboard/monitor/online/online';
 import { Server } from './dashboard/monitor/server/server';
+
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/login' },
@@ -34,6 +37,7 @@ export const routes: Routes = [
       { path: 'dept', component: Dept },
       { path: 'config', component: Config },
       { path: 'notice', component: Notice },
+      { path: 'post', component: Post },
     ],
   },
   {

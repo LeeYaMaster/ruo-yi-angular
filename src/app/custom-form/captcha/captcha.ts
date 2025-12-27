@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, inject, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CaptchaApiService } from './captcha.api.service';
-import { SafeHtml } from '@angular/platform-browser';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { fromEvent, tap, throttleTime } from 'rxjs';
+import { fromEvent, throttleTime } from 'rxjs';
 import { CaptchaService } from './captcha.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-captcha',
@@ -14,22 +14,29 @@ import { CaptchaService } from './captcha.service';
 export class Captcha {
   private captchaApiService = inject(CaptchaApiService);
   private captchaService = inject(CaptchaService);
+  private platformId = inject(PLATFORM_ID);
   @ViewChild('captchaRef') captchaRef!: ElementRef;
   captchaUrl: string = '';
   uuid: string = ''
   private cdr = inject(ChangeDetectorRef);
   ngOnInit(): void {
     console.log('Captcha ngOnInit');
-    this.getCaptchaUrl();
+    // 只在浏览器端调用 API，避免 SSR 环境下的 URL 解析错误
+    if (isPlatformBrowser(this.platformId)) {
+      this.getCaptchaUrl();
+    }
   }
 
   ngAfterViewInit(): void {
-    fromEvent(this.captchaRef.nativeElement, 'click')
-      .pipe(
-        throttleTime(1000))
-      .subscribe(() => {
-        this.getCaptchaUrl();
-      });
+    // 只在浏览器端绑定事件监听器，避免 SSR 环境下的错误
+    if (isPlatformBrowser(this.platformId) && this.captchaRef?.nativeElement) {
+      fromEvent(this.captchaRef.nativeElement, 'click')
+        .pipe(
+          throttleTime(1000))
+        .subscribe(() => {
+          this.getCaptchaUrl();
+        });
+    }
   }
 
   getCaptchaUrl(): void {
