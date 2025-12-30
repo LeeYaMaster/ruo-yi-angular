@@ -13,7 +13,7 @@
         </a>
       </div>
       <ul nz-menu nzTheme="light" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-        @for(menu of list; track menu.path) {
+        @for(menu of list(); track menu.path) {
           @if(!menu.hidden) {
           <li nz-submenu nzMatchRouter [nzTitle]="menu.meta?.title" [nzIcon]="menu.meta?.icon" [nzOpen]="false">
             @if(menu.children && menu.children.length > 0) {

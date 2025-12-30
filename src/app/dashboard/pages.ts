@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -23,9 +23,10 @@ import { CommonModule } from '@angular/common';
   templateUrl: './pages.html',
   styleUrl: './pages.less',
 })
-export class Pages {
+export class Pages implements OnInit {
   isCollapsed = false;
-  list: any = []
+  // 使用 signal 存储菜单数据，zoneless 模式下会自动检测变更
+  list = signal<any[]>([]);
   exit() {}
   private pagesApiService = inject(PagesApiService);
 
@@ -36,15 +37,26 @@ export class Pages {
 
   getUserInfo() {
     this.pagesApiService.getInfo().subscribe((res) => {
-      console.log(res);
+      console.log('用户信息:', res);
       
     });
   }
   
   loadMenu() {
-    this.pagesApiService.getRouters().subscribe((res) => {
-      console.log(res);
-      this.list = res.data;
+    this.pagesApiService.getRouters().subscribe({
+      next: (res) => {
+        console.log('菜单接口返回:', res);
+        if (res && res.code === 200 && res.data) {
+          console.log('菜单数据:', res.data);
+          this.list.set(res.data);
+          console.log('菜单列表已更新，当前值:', this.list());
+        } else {
+          console.warn('菜单数据格式异常:', res);
+        }
+      },
+      error: (err) => {
+        console.error('获取菜单失败:', err);
+      }
     });
   }
 }
