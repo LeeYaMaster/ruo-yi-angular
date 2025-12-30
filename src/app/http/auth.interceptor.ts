@@ -1,35 +1,63 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
+import { HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { StorageService } from '../util/storage.service';
 import { inject } from '@angular/core';
+import { throwError } from 'rxjs';
+
+const TokenKey = 'Admin-Token';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storageService = inject(StorageService);
-  const token = storageService.get('token');
 
   // 处理 CORS 跨域请求的 OPTIONS 预检，不添加 Authorization 头
   if (req.method === 'OPTIONS') {
     return next(req);
   }
 
-  if (!token) return next(req);
+  // 获取自定义header，判断是否需要设置token
+  const isToken = (req.headers.get('isToken') || '') !== 'false';
+  
+  // 判断是否需要防止数据重复提交
+  const isRepeatSubmit = (req.headers.get('repeatSubmit') || '') !== 'false';
 
-  // 克隆请求并附加头
-  const authReq = req.clone({
-    setHeaders: { Authorization: `Bearer ${token}` },
+  // 处理POST/PUT请求的防重复提交
+  if (!isRepeatSubmit && (req.method === 'POST' || req.method === 'PUT')) {
+    const requestObj = {
+      url: req.url,
+      data: typeof req.body === 'object' ? JSON.stringify(req.body) : req.body,
+      time: new Date().getTime()
+    };
+    const sessionObj = storageService.session.getJSON('sessionObj');
+    if (sessionObj) {
+      const s_url = sessionObj.url;
+      const s_data = sessionObj.data;
+      const s_time = sessionObj.time;
+      const interval = 1000; // 间隔时间(ms)，小于此时间视为重复提交
+      if (s_data === requestObj.data && requestObj.time - s_time < interval && s_url === requestObj.url) {
+        console.warn(`[${requestObj.url}]: 数据正在处理，请勿重复提交`);
+        return throwError(() => new Error('数据正在处理，请勿重复提交'));
+      }
+    }
+    storageService.session.setJSON('sessionObj', requestObj);
+  }
+
+  // 获取token
+  const token = storageService.get(TokenKey);
+
+  // 克隆请求，设置headers
+  let clonedReq: HttpRequest<any> = req.clone({
+    setHeaders: {
+      'Content-Type': 'application/json;charset=utf-8'
+    }
   });
 
-  return next(authReq).pipe(
-    catchError((err: HttpErrorResponse) => {
-      if (err.status === 401) {
-        // 这里可以刷新 token 或跳登录
-        console.warn('401 触发刷新流程');
+  // 如果需要token且存在token，则添加Authorization头
+  if (token && isToken) {
+    clonedReq = clonedReq.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
       }
-      // 跨域错误提示（如 CORS 阻止了请求）
-      if (err.status === 0 && err.error instanceof ProgressEvent) {
-        console.error('可能的 CORS 跨域问题，请检查服务器允许的来源和请求头。');
-      }
-      return throwError(() => err);
-    })
-  );
+    });
+  }
+
+  return next(clonedReq);
 };

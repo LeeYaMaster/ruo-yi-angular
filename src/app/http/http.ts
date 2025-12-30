@@ -1,97 +1,68 @@
-import {Injectable} from '@angular/core';
-import {NzMessageService} from 'ng-zorro-antd/message';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Config} from './config';
-import {Router} from '@angular/router';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Config } from './config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BaseHttp {
-  constructor(
-    // public msg: NzMessageService, 
-    public httpClient: HttpClient, 
-    private router: Router) {
+  constructor(private httpClient: HttpClient) {}
 
+  /**
+   * GET 请求
+   * @param url 请求地址
+   * @param params 请求参数
+   * @returns Observable（直接返回body，与Vue项目保持一致）
+   */
+  public get(url: string, params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.httpClient.get(Config.API_URL + url, { params: httpParams, observe: 'body' });
   }
 
-  public get(url: string, data: object): Observable<any> {
-    return this.httpClient.get(Config.API_URL + url, {
-      params: {
-        ...data
-      },
-    });
-  }
-  // headers: {
-  //   'content-type': 'application/x-www-form-urlencoded'
-  // }
-  // if (result.data.msg === '您没有权限访问当前地址') {
-  //   this.msg.error(result.data.msg);
-  // }
-  // if (result.data.msg === '请您登录') {
-  //   this.msg.error('Session过期，请重新登录');
-  //   this.router.navigate(['login']);
-  // }
-
-  public post(url: string, data: object) {
-    return this.httpClient.post(Config.API_URL + url, data, {
-      // headers: {'content-type': 'application/x-www-form-urlencoded'},
-    });
+  /**
+   * POST 请求
+   * @param url 请求地址
+   * @param data 请求数据
+   * @returns Observable（直接返回body，与Vue项目保持一致）
+   */
+  public post(url: string, data?: any): Observable<any> {
+    return this.httpClient.post(Config.API_URL + url, data, { observe: 'body' });
   }
 
-  // public async put(url: string, data: object) {
-  //   // put 有问题，参数不能在url上面。
-  //   let str = '?';
-  //   for (let key in data) {
-  //     str += `${key}=${data[key]}&`;
-  //   }
-  //   const result: object = await this.httpClient.put(Config.API_URL + url + str);
-  //   if (result.data.msg === '您没有权限访问当前地址') {
-  //     this.msg.error(result.data.msg);
-  //   }
-  //   if (result.data.msg === '请您登录') {
-  //     this.msg.error('Session过期，请重新登录');
-  //     this.router.navigate(['login']);
-  //   }
-  //   return result;
-  // }
+  /**
+   * PUT 请求
+   * @param url 请求地址
+   * @param data 请求数据
+   * @returns Observable（直接返回body，与Vue项目保持一致）
+   */
+  public put(url: string, data?: any): Observable<any> {
+    return this.httpClient.put(Config.API_URL + url, data, { observe: 'body' });
+  }
 
-  // public async delete(url: string, data: object) {
-  //   const result: object = await this.httpClient.delete(Config.API_URL + url, {
-  //     params: {
-  //       ...data
-  //     },
-  //     headers: {
-  //       'content-type': 'application/x-www-form-urlencoded'
-  //     }
-  //   });
-  //   if (result.data.msg === '您没有权限访问当前地址') {
-  //     this.msg.error(result.data.msg);
-  //   }
-  //   if (result.data.msg === '请您登录') {
-  //     this.msg.error('Session过期，请重新登录');
-  //     this.router.navigate(['login']);
-  //   }
-  //   return result;
-  // }
-
-  // public upload(url: string, param: object, callbackFun) {
-  //   this.httpClient.post(Config.API_URL + url, param, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         // 'token': localStorage.getItem('token')
-  //       },
-  //     })
-  //     .then((result) => {
-  //       return callbackFun(result.data);
-  //     })
-  //     .catch((error) => {
-  //       return callbackFun(error.data);
-  //     });
-  // }
-}
-
-interface ValueObject {
-  status?: number;
+  /**
+   * DELETE 请求
+   * @param url 请求地址
+   * @param params 请求参数
+   * @returns Observable（直接返回body，与Vue项目保持一致）
+   */
+  public delete(url: string, params?: any): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.httpClient.delete(Config.API_URL + url, { params: httpParams, observe: 'body' });
+  }
 }

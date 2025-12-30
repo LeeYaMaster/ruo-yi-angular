@@ -7,6 +7,8 @@ import { Captcha} from '../custom-form/captcha/captcha';
 import { CaptchaService } from '../custom-form/captcha/captcha.service';
 import { Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { StorageService } from '../util/storage.service';
+import { TokenKey } from '../util/auth.util';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +21,7 @@ export class Login {
   private captchaService = inject(CaptchaService);
   private router = inject(Router);
   private message = inject(NzMessageService);
+  private storageService = inject(StorageService);
   ngOnInit(): void {
     const uuid = this.captchaService.getUuid()
     console.log(uuid);
@@ -28,8 +31,8 @@ export class Login {
     const uuid = this.captchaService.getUuid()
     this.loginApiService.login({...event, uuid}).subscribe((res) => {
       if (res.code === 200) {
-        localStorage.setItem('token', res.data.token);
-        this.router.navigate(['/pages/welcome']);
+        this.storageService.set(TokenKey, res.data.token);
+        this.router.navigate(['/system/welcome']);
       } else {
         this.message.error(res.msg);
       }
