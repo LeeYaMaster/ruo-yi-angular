@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -10,11 +18,15 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzRadioModule } from 'ng-zorro-antd/radio';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzGridModule } from 'ng-zorro-antd/grid';
 import { ErrorMessage, FormConfig, GroupValidator, RulesKey } from './builder-form.model';
 import { CommonModule } from '@angular/common';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { confirmPasswordValidator, phoneValidator } from './builder-form.validators';
-
 
 @Component({
   selector: 'app-builder-form',
@@ -24,19 +36,31 @@ import { confirmPasswordValidator, phoneValidator } from './builder-form.validat
     NzCheckboxModule,
     NzFormModule,
     NzInputModule,
+    NzSelectModule,
+    NzRadioModule,
+    NzInputNumberModule,
+    NzIconModule,
+    NzGridModule,
     CommonModule,
   ],
   templateUrl: './builder-form.html',
   styleUrl: './builder-form.less',
-  // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class BuilderForm {
+export class BuilderForm implements OnChanges {
   @Input() formConfig: FormConfig = [];
   @Input() groupValidators: GroupValidator[] = [];
+  /** login | vertical — login keeps icon-prefix style without labels */
+  @Input() layout: 'login' | 'vertical' | 'horizontal' = 'login';
+  @Input() submitText = '提交';
+  @Input() showSubmit = true;
+  @Input() labelSpan = 6;
+  @Input() controlSpan = 16;
   @Output() submitFormEvent = new EventEmitter<any>();
+
   private fb = inject(NonNullableFormBuilder);
   private notification = inject(NzNotificationService);
   validateForm = this.fb.group({});
+  private built = false;
 
   getControlErrorsMessage(control: AbstractControl, errorMessage: ErrorMessage = {}): string[] {
     return Object.keys(control.errors ?? {}).map((key) => errorMessage?.[key as RulesKey] ?? '');
@@ -50,11 +74,41 @@ export class BuilderForm {
     return arr.join('\n');
   }
 
-  // 监听页面值变化，根据 when 过滤对应验证器
-  ngAfterViewInit(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['formConfig'] && this.formConfig?.length) {
+      this.buildForm();
+    }
+  }
+
+  ngOnInit(): void {
+    if (!this.built && this.formConfig?.length) {
+      this.buildForm();
+    }
     this.validateForm.valueChanges.subscribe((formValue) => {
       this.clearAllHideControls(formValue);
     });
+  }
+
+  private buildForm(): void {
+    const next = this.fb.group({});
+    this.formConfig.forEach((item) => {
+      const validators =
+        Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) ||
+        [];
+      const ctrl = this.fb.control(
+        { value: item.defaultValue ?? (item.component === 'number' ? 0 : ''), disabled: !!item.disabled },
+        validators.flat()
+      );
+      next.addControl(item.name, ctrl);
+    });
+    this.groupValidators?.forEach((g) => {
+      if (g.validator === 'confirmPassword') {
+        next.setValidators(confirmPasswordValidator(g.fields[0], g.fields[1]));
+      }
+    });
+    this.validateForm = next;
+    this.built = true;
+    this.clearAllHideControls(this.validateForm.value);
   }
 
   clearAllHideControls(formValue: any): void {
@@ -63,33 +117,16 @@ export class BuilderForm {
       if (!control) return;
       const show = !item.when || item.when(formValue);
       if (show) {
-        // 如果应该显示，确保有校验规则
         const validators =
-          Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) || {};
+          Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) ||
+          [];
         control.setValidators(validators.flat());
       } else {
-        // 如果不显示，移除所有校验规则，并清空错误
         control.clearValidators();
         control.setErrors(null);
       }
       control.updateValueAndValidity({ onlySelf: true });
     });
-  }
-
-  ngOnInit(): void {
-    console.log(this.formConfig);
-
-    this.formConfig.forEach((item) => {
-      const validators =
-        Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) || {};
-      this.validateForm.addControl(item.name, this.fb.control(item.defaultValue ?? '', validators.flat()));
-    });
-    this.groupValidators?.forEach((g) => {
-      if (g.validator === 'confirmPassword') {
-        this.validateForm.setValidators(confirmPasswordValidator(g.fields[0], g.fields[1]));
-      }
-    });
-    this.clearAllHideControls(this.validateForm.value);
   }
 
   getRuleValidator(key: string, value: any): ValidatorFn[] {
@@ -104,7 +141,7 @@ export class BuilderForm {
           arr.push(phoneValidator());
         }
         return arr.length ? arr : Validators.nullValidator;
-      }
+      },
     };
 
     if (validatorMap[key]) {
@@ -120,29 +157,38 @@ export class BuilderForm {
     return validators.length ? validators : [Validators.nullValidator];
   }
 
+  /** Patch values after open edit modal */
+  patchValue(value: Record<string, any>): void {
+    this.validateForm.patchValue(value ?? {});
+  }
+
+  reset(value?: Record<string, any>): void {
+    this.validateForm.reset(value ?? {});
+  }
+
+  getRawValue(): any {
+    return this.validateForm.getRawValue();
+  }
+
   submitForm(): void {
     if (this.validateForm.valid) {
-      // 过滤掉 when 不满足的项，只保留展示的项数据
       const filteredValue = Object.fromEntries(
         this.formConfig
           .filter((item) => !item.when || item.when(this.validateForm.value))
-          .map((item) => [item.name, (this.validateForm.value as any)[item.name]])
+          .map((item) => [item.name, (this.validateForm.getRawValue() as any)[item.name]])
       );
-      console.log('submit', filteredValue);
       this.submitFormEvent.emit(filteredValue);
     } else {
-      console.log('validateForm', this.validateForm);
       Object.entries(this.validateForm.controls).forEach(([key, control]: [string, any]) => {
         if (control.invalid) {
-          console.log('control', control.errors);
-
           const currentFormConfig = this.formConfig.find((item) => item.name === key);
           this.getControlErrorsMessage(control, currentFormConfig?.errorMessage).forEach(
             (errorMessage) => {
-              this.notification.create('error', 'Form Validation Error', errorMessage);
+              if (errorMessage) {
+                this.notification.create('error', '表单校验失败', errorMessage);
+              }
             }
           );
-
           control.markAsDirty();
           control.updateValueAndValidity({ onlySelf: true });
         }

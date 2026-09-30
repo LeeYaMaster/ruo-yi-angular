@@ -99,3 +99,67 @@ export function resetForm(form: any): void {
   }
 }
 
+
+
+/**
+ * 构造树型结构数据
+ */
+export function handleTree<T extends Record<string, any>>(
+  data: T[],
+  id?: string,
+  parentId?: string,
+  children?: string
+): T[] {
+  const config = {
+    id: id || 'id',
+    parentId: parentId || 'parentId',
+    childrenList: children || 'children'
+  };
+
+  const childrenListMap: Record<string, T[]> = {};
+  const nodeIds: Record<string, T> = {};
+  const tree: T[] = [];
+
+  for (const d of data || []) {
+    const pid = d[config.parentId];
+    childrenListMap[pid] = childrenListMap[pid] || [];
+    nodeIds[d[config.id]] = d;
+    childrenListMap[pid].push(d);
+  }
+
+  for (const d of data || []) {
+    const pid = d[config.parentId];
+    if (nodeIds[pid] == null) {
+      tree.push(d);
+    }
+  }
+
+  const adaptToChildrenList = (o: any) => {
+    if (childrenListMap[o[config.id]] != null) {
+      o[config.childrenList] = childrenListMap[o[config.id]];
+    }
+    if (o[config.childrenList]) {
+      for (const c of o[config.childrenList]) {
+        adaptToChildrenList(c);
+      }
+    }
+  };
+
+  for (const t of tree) {
+    adaptToChildrenList(t);
+  }
+  return tree;
+}
+
+/**
+ * 解析列表接口分页数据（兼容 Nest data.list/total 与经典 rows/total）
+ */
+export function parsePage(res: any): { list: any[]; total: number } {
+  const data = res?.data ?? res;
+  if (Array.isArray(data)) {
+    return { list: data, total: data.length };
+  }
+  const list = data?.list ?? data?.rows ?? res?.rows ?? [];
+  const total = data?.total ?? res?.total ?? list.length;
+  return { list, total };
+}

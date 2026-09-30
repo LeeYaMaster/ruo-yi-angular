@@ -1,79 +1,98 @@
-import { Component } from '@angular/core';
-import { NzButtonModule } from 'ng-zorro-antd/button';
+import {
+  Component,
+  ContentChild,
+  EventEmitter,
+  Input,
+  Output,
+  TemplateRef,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { NzTableModule } from 'ng-zorro-antd/table';
-
-export interface Data {
-  id: number;
-  name: string;
-  age: number;
-  address: string;
-  disabled: boolean;
-}
-
+import { BuilderTableColumn } from './builder-table.model';
 
 @Component({
   selector: 'app-builder-table',
-  imports: [NzButtonModule,NzTableModule],
+  imports: [CommonModule, NzTableModule],
   templateUrl: './builder-table.html',
   styleUrl: './builder-table.less',
 })
 export class BuilderTable {
-  checked = false;
-  loading = false;
-  indeterminate = false;
-  listOfData: readonly Data[] = [];
-  listOfCurrentPageData: readonly Data[] = [];
-  setOfCheckedId = new Set<number>();
+  @Input() columns: BuilderTableColumn[] = [];
+  @Input() data: readonly any[] = [];
+  @Input() loading = false;
+  @Input() total = 0;
+  @Input() pageIndex = 1;
+  @Input() pageSize = 10;
+  /** primary key field used for selection */
+  @Input() rowKey = 'id';
+  @Input() showCheckbox = true;
+  @Input() bordered = true;
+  @Input() size: 'small' | 'middle' | 'default' = 'middle';
+  @Input() actionWidth = '140px';
 
-  updateCheckedSet(id: number, checked: boolean): void {
-    if (checked) {
-      this.setOfCheckedId.add(id);
-    } else {
-      this.setOfCheckedId.delete(id);
-    }
+  @Output() pageIndexChange = new EventEmitter<number>();
+  @Output() pageSizeChange = new EventEmitter<number>();
+  @Output() selectionChange = new EventEmitter<Set<any>>();
+
+  /** projected action cell: <ng-template #actions let-row>…</ng-template> */
+  @ContentChild('actions') actionsTpl?: TemplateRef<{ $implicit: any }>;
+
+  checked = false;
+  indeterminate = false;
+  setOfCheckedId = new Set<any>();
+  private currentPageData: readonly any[] = [];
+
+  cellValue(row: any, col: BuilderTableColumn): any {
+    const raw = row?.[col.key];
+    return col.format ? col.format(row, raw) : raw;
   }
 
-  onCurrentPageDataChange(listOfCurrentPageData: readonly Data[]): void {
-    this.listOfCurrentPageData = listOfCurrentPageData;
+  trackRow = (_: number, row: any) => row?.[this.rowKey] ?? _;
+
+  onCurrentPageDataChange(list: readonly any[]): void {
+    this.currentPageData = list;
     this.refreshCheckedStatus();
   }
 
   refreshCheckedStatus(): void {
-    const listOfEnabledData = this.listOfCurrentPageData.filter(({ disabled }) => !disabled);
-    this.checked = listOfEnabledData.every(({ id }) => this.setOfCheckedId.has(id));
-    this.indeterminate = listOfEnabledData.some(({ id }) => this.setOfCheckedId.has(id)) && !this.checked;
+    const list = this.currentPageData;
+    if (!list.length) {
+      this.checked = false;
+      this.indeterminate = false;
+      return;
+    }
+    const keys = list.map((r) => r[this.rowKey]);
+    this.checked = keys.every((id) => this.setOfCheckedId.has(id));
+    this.indeterminate = keys.some((id) => this.setOfCheckedId.has(id)) && !this.checked;
   }
 
-  onItemChecked(id: number, checked: boolean): void {
-    this.updateCheckedSet(id, checked);
+  onItemChecked(id: any, checked: boolean): void {
+    if (checked) this.setOfCheckedId.add(id);
+    else this.setOfCheckedId.delete(id);
     this.refreshCheckedStatus();
+    this.selectionChange.emit(new Set(this.setOfCheckedId));
   }
 
   onAllChecked(checked: boolean): void {
-    this.listOfCurrentPageData
-      .filter(({ disabled }) => !disabled)
-      .forEach(({ id }) => this.updateCheckedSet(id, checked));
+    this.currentPageData.forEach((r) => {
+      const id = r[this.rowKey];
+      if (checked) this.setOfCheckedId.add(id);
+      else this.setOfCheckedId.delete(id);
+    });
     this.refreshCheckedStatus();
+    this.selectionChange.emit(new Set(this.setOfCheckedId));
   }
 
-  sendRequest(): void {
-    this.loading = true;
-    const requestData = this.listOfData.filter(data => this.setOfCheckedId.has(data.id));
-    console.log(requestData);
-    setTimeout(() => {
-      this.setOfCheckedId.clear();
-      this.refreshCheckedStatus();
-      this.loading = false;
-    }, 1000);
+  /** clear selection (e.g. after reload) */
+  clearSelection(): void {
+    this.setOfCheckedId.clear();
+    this.refreshCheckedStatus();
+    this.selectionChange.emit(new Set());
   }
 
-  ngOnInit(): void {
-    this.listOfData = new Array(100).fill(0).map((_, index) => ({
-      id: index,
-      name: `Edward King ${index}`,
-      age: 32,
-      address: `London, Park Lane no. ${index}`,
-      disabled: index % 2 === 0
-    }));
+  /** sync external selection */
+  setSelection(ids: Iterable<any>): void {
+    this.setOfCheckedId = new Set(ids);
+    this.refreshCheckedStatus();
   }
 }

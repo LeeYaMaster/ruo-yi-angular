@@ -1,1 +1,38 @@
-<p>cache-list works!</p>
+<div class="page">
+  <div class="toolbar">
+    <button *hasPermi="['monitor:cache:list']" nz-button nzDanger (click)="clearAll()"><span nz-icon nzType="delete"></span>清理全部</button>
+    <button nz-button (click)="loadNames()"><span nz-icon nzType="reload"></span>刷新</button>
+  </div>
+  <div style="display:flex; gap:16px;">
+    <div style="flex:1">
+      <h4>缓存列表</h4>
+      <nz-table [nzData]="names()" [nzLoading]="loadingNames()" [nzFrontPagination]="true" nzSize="small" nzBordered>
+        <thead><tr><th>缓存名称</th><th>备注</th><th>操作</th></tr></thead>
+        <tbody>
+          @for (row of names(); track $index) {
+            <tr (click)="selectName(row)" style="cursor:pointer">
+              <td>{{ row.cacheName || row }}</td>
+              <td>{{ row.remark }}</td>
+              <td><a *hasPermi="['monitor:cache:list']" (click)="$event.stopPropagation(); clearName(row)">清理</a></td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </div>
+    <div style="flex:1">
+      <h4>键名列表 {{ selectedName }}</h4>
+      <nz-table [nzData]="keys()" [nzLoading]="loadingKeys()" [nzFrontPagination]="true" nzSize="small" nzBordered>
+        <thead><tr><th>缓存键名</th></tr></thead>
+        <tbody>
+          @for (k of keys(); track $index) {
+            <tr (click)="selectKey(k)" style="cursor:pointer"><td>{{ k.cacheKey || k }}</td></tr>
+          }
+        </tbody>
+      </nz-table>
+    </div>
+    <div style="flex:1">
+      <h4>缓存内容</h4>
+      <pre class="pre">{{ value() | json }}</pre>
+    </div>
+  </div>
+</div>

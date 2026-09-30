@@ -1,0 +1,51 @@
+<div class="page">
+  <h4 class="form-header">基本信息</h4>
+  <form nz-form nzLayout="inline">
+    <nz-form-item>
+      <nz-form-label>用户昵称</nz-form-label>
+      <nz-form-control><input nz-input [ngModel]="form().nickName" name="nickName" disabled /></nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>登录账号</nz-form-label>
+      <nz-form-control><input nz-input [ngModel]="form().userName" name="userName" disabled /></nz-form-control>
+    </nz-form-item>
+  </form>
+
+  <h4 class="form-header" style="margin-top: 24px">角色信息</h4>
+  <nz-table
+    [nzData]="pagedRoles()"
+    [nzLoading]="loading()"
+    [nzFrontPagination]="false"
+    [nzTotal]="roles().length"
+    [(nzPageIndex)]="pageNum"
+    [(nzPageSize)]="pageSize"
+    nzBordered
+    nzSize="middle"
+  >
+    <thead>
+      <tr>
+        <th nzWidth="60px"></th>
+        <th>角色编号</th>
+        <th>角色名称</th>
+        <th>权限字符</th>
+        <th>创建时间</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of pagedRoles(); track row.roleId) {
+        <tr>
+          <td [nzChecked]="checkedIds.has(row.roleId)" (nzCheckedChange)="onItemChecked(row.roleId, $event)"></td>
+          <td>{{ row.roleId }}</td>
+          <td>{{ row.roleName }}</td>
+          <td>{{ row.roleKey }}</td>
+          <td>{{ parseTime(row.createTime) }}</td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+
+  <div class="footer-actions">
+    <button nz-button nzType="primary" (click)="submit()">提交</button>
+    <button nz-button (click)="close()">返回</button>
+  </div>
+</div>

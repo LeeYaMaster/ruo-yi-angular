@@ -127,4 +127,9 @@ export class PagesApiService {
   getRouters(): Observable<PagesRouterApiResponse> {
     return this.baseHttp.get('getRouters', {}) as Observable<PagesRouterApiResponse>;
   }
+
+  logout(): Observable<any> {
+    return this.baseHttp.post('logout', {});
+  }
 }
+

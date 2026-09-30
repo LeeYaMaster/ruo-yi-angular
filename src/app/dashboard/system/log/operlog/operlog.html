@@ -1,1 +1,51 @@
-<p>operlog works!</p>
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>系统模块</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.title" name="title" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>操作人员</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.operName" name="operName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>类型</nz-form-label><nz-form-control>
+      <nz-select [(ngModel)]="query.businessType" name="businessType" nzAllowClear style="width:140px">
+        @for (d of typeOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
+      </nz-select>
+    </nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['monitor:operlog:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+    <button *hasPermi="['monitor:operlog:remove']" nz-button nzDanger (click)="clean()"><span nz-icon nzType="delete"></span>清空</button>
+    <button *hasPermi="['monitor:operlog:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
+  </div>
+  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle" [nzScroll]="{ x: '1200px' }">
+    <thead><tr>
+      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+      <th>日志编号</th><th>系统模块</th><th>操作类型</th><th>操作人员</th><th>操作地址</th><th>操作状态</th><th>操作日期</th><th nzWidth="80px">操作</th>
+    </tr></thead>
+    <tbody>
+      @for (row of t.data; track row.operId) {
+        <tr>
+          <td [nzChecked]="checkedIds.has(row.operId)" (nzCheckedChange)="onItemChecked(row.operId,$event)"></td>
+          <td>{{ row.operId }}</td><td>{{ row.title }}</td><td>{{ typeLabel(row.businessType) }}</td>
+          <td>{{ row.operName }}</td><td>{{ row.operIp }}</td><td>{{ statusLabel(row.status) }}</td>
+          <td>{{ parseTime(row.operTime) }}</td>
+          <td><a *hasPermi="['monitor:operlog:query']" (click)="showDetail(row)">详细</a></td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+<nz-modal [(nzVisible)]="detailVisible" nzTitle="操作日志详细" [nzFooter]="null" (nzOnCancel)="detailVisible=false" [nzWidth]="700">
+  <ng-container *nzModalContent>
+    <p><b>操作模块：</b>{{ detail.title }} / {{ typeLabel(detail.businessType) }}</p>
+    <p><b>登录信息：</b>{{ detail.operName }} / {{ detail.operIp }} / {{ detail.operLocation }}</p>
+    <p><b>请求地址：</b>{{ detail.operUrl }}</p>
+    <p><b>请求方式：</b>{{ detail.requestMethod }}</p>
+    <p><b>操作方法：</b>{{ detail.method }}</p>
+    <p><b>请求参数：</b></p><div class="pre">{{ detail.operParam }}</div>
+    <p><b>返回参数：</b></p><div class="pre">{{ detail.jsonResult }}</div>
+    <p><b>操作状态：</b>{{ statusLabel(detail.status) }}</p>
+    <p><b>操作时间：</b>{{ parseTime(detail.operTime) }}</p>
+    @if (detail.errorMsg) { <p><b>异常信息：</b></p><div class="pre">{{ detail.errorMsg }}</div> }
+  </ng-container>
+</nz-modal>

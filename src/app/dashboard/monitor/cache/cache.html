@@ -1,1 +1,8 @@
-<p>cache works!</p>
+<div class="page">
+  <div class="toolbar">
+    <button nz-button nzType="primary" (click)="load()"><span nz-icon nzType="reload"></span>刷新</button>
+  </div>
+  <nz-spin [nzSpinning]="loading()">
+    <nz-card nzTitle="缓存监控信息"><pre class="pre">{{ data() | json }}</pre></nz-card>
+  </nz-spin>
+</div>

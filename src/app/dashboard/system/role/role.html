@@ -1,1 +1,210 @@
-<p>role works!</p>
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item>
+      <nz-form-label>角色名称</nz-form-label>
+      <nz-form-control>
+        <input nz-input [(ngModel)]="query.roleName" name="roleName" placeholder="请输入角色名称" (keyup.enter)="onQuery()" />
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>权限字符</nz-form-label>
+      <nz-form-control>
+        <input nz-input [(ngModel)]="query.roleKey" name="roleKey" placeholder="请输入权限字符" (keyup.enter)="onQuery()" />
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>状态</nz-form-label>
+      <nz-form-control>
+        <nz-select [(ngModel)]="query.status" name="status" nzAllowClear nzPlaceHolder="角色状态" style="width: 160px">
+          @for (d of statusOptions; track d.value) {
+            <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+          }
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+
+  <div class="toolbar">
+    <button *hasPermi="['system:role:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
+    <button *hasPermi="['system:role:edit']" nz-button [disabled]="checkedIds.size !== 1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
+    <button *hasPermi="['system:role:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+    <button *hasPermi="['system:role:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
+  </div>
+
+  <nz-table
+    #roleTable
+    [nzData]="list()"
+    [nzLoading]="loading()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="query.pageNum"
+    [nzPageSize]="query.pageSize"
+    [nzShowSizeChanger]="true"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+    (nzPageSizeChange)="onPageSizeChange($event)"
+    nzBordered
+    nzSize="middle"
+  >
+    <thead>
+      <tr>
+        <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+        <th>角色编号</th>
+        <th>角色名称</th>
+        <th>权限字符</th>
+        <th>显示顺序</th>
+        <th>状态</th>
+        <th>创建时间</th>
+        <th nzWidth="160px">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of roleTable.data; track row.roleId) {
+        <tr>
+          <td
+            [nzChecked]="checkedIds.has(row.roleId)"
+            [nzDisabled]="row.roleId === 1"
+            (nzCheckedChange)="onItemChecked(row.roleId, $event)"
+          ></td>
+          <td>{{ row.roleId }}</td>
+          <td>{{ row.roleName }}</td>
+          <td>{{ row.roleKey }}</td>
+          <td>{{ row.roleSort }}</td>
+          <td>
+            <nz-switch
+              [ngModel]="row.status === '0'"
+              (ngModelChange)="onStatusChange(row, $event)"
+              [nzDisabled]="row.roleId === 1"
+            ></nz-switch>
+          </td>
+          <td>{{ parseTime(row.createTime) }}</td>
+          <td>
+            @if (row.roleId !== 1) {
+              <a *hasPermi="['system:role:edit']" (click)="openEdit(row)">修改</a>
+              <span class="sep">|</span>
+              <a *hasPermi="['system:role:remove']" (click)="remove(row)">删除</a>
+              <span class="sep">|</span>
+              <a *hasPermi="['system:role:edit']" (click)="openDataScope(row)">数据权限</a>
+              <span class="sep">|</span>
+              <a *hasPermi="['system:role:edit']" (click)="goAuthUser(row)">分配用户</a>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<nz-modal
+  [(nzVisible)]="modalVisible"
+  [nzTitle]="modalTitle"
+  [nzWidth]="680"
+  [nzOkLoading]="submitting"
+  (nzOnCancel)="modalVisible = false"
+  (nzOnOk)="submit()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form >
+      <nz-form-item>
+        <nz-form-label nzRequired>角色名称</nz-form-label>
+        <nz-form-control><input nz-input [(ngModel)]="form.roleName" name="roleName" /></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>权限字符</nz-form-label>
+        <nz-form-control><input nz-input [(ngModel)]="form.roleKey" name="roleKey" /></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>角色顺序</nz-form-label>
+        <nz-form-control>
+          <nz-input-number [(ngModel)]="form.roleSort" name="roleSort" [nzMin]="0" style="width: 100%"></nz-input-number>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>状态</nz-form-label>
+        <nz-form-control>
+          <nz-radio-group [(ngModel)]="form.status" name="status">
+            @for (d of statusOptions; track d.value) {
+              <label nz-radio [nzValue]="d.value">{{ d.label }}</label>
+            }
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>菜单权限</nz-form-label>
+        <nz-form-control>
+          <label nz-checkbox [(ngModel)]="menuExpandAll" name="menuExpandAll">展开/折叠</label>
+          <label nz-checkbox [(ngModel)]="menuCheckStrictly" name="menuCheckStrictly" class="ml8">父子联动</label>
+          <div class="menu-tree">
+            <nz-tree
+              [nzData]="menuNodes"
+              nzCheckable
+              [(nzCheckedKeys)]="checkedMenuKeys"
+              [nzExpandAll]="menuExpandAll"
+              [nzCheckStrictly]="!menuCheckStrictly"
+            ></nz-tree>
+          </div>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>备注</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input [(ngModel)]="form.remark" name="remark" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
+
+
+<nz-modal
+  [(nzVisible)]="dataScopeVisible"
+  nzTitle="分配数据权限"
+  [nzWidth]="500"
+  [nzOkLoading]="dataScopeSubmitting"
+  (nzOnCancel)="dataScopeVisible = false"
+  (nzOnOk)="submitDataScope()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form>
+      <nz-form-item>
+        <nz-form-label>角色名称</nz-form-label>
+        <nz-form-control><input nz-input [(ngModel)]="dataScopeForm.roleName" name="dsRoleName" disabled /></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>权限字符</nz-form-label>
+        <nz-form-control><input nz-input [(ngModel)]="dataScopeForm.roleKey" name="dsRoleKey" disabled /></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>权限范围</nz-form-label>
+        <nz-form-control>
+          <nz-select [(ngModel)]="dataScopeForm.dataScope" name="dataScope" style="width:100%" (ngModelChange)="onDataScopeChange($event)">
+            @for (d of dataScopeOptions; track d.value) {
+              <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      @if (dataScopeForm.dataScope === '2') {
+        <nz-form-item>
+          <nz-form-label>数据权限</nz-form-label>
+          <nz-form-control>
+            <label nz-checkbox [(ngModel)]="deptExpandAll" name="deptExpandAll">展开/折叠</label>
+            <label nz-checkbox [(ngModel)]="deptCheckStrictly" name="deptCheckStrictly" class="ml8">父子联动</label>
+            <div class="menu-tree">
+              <nz-tree
+                [nzData]="deptNodes"
+                nzCheckable
+                [(nzCheckedKeys)]="checkedDeptKeys"
+                [nzExpandAll]="deptExpandAll"
+                [nzCheckStrictly]="!deptCheckStrictly"
+              ></nz-tree>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+      }
+    </form>
+  </ng-container>
+</nz-modal>

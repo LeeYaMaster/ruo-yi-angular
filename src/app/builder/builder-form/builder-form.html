@@ -1,50 +1,92 @@
-<form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
+<form
+  nz-form
+  [formGroup]="validateForm"
+  [class.login-form]="layout === 'login'"
+  [nzLayout]="layout === 'horizontal' ? 'horizontal' : 'vertical'"
+  (ngSubmit)="submitForm()"
+>
   @for (item of formConfig; track item.name) {
-  <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
-   
-    <nz-form-control [nzErrorTip]="getErrorTip">
-      @if (item.component === 'input') {
-        <nz-input-wrapper>
-          <nz-icon nzInputPrefix nzType="user" />
-          <input
-            type="text"
-            nz-input
-            formControlName="{{ item.name }}"
-            placeholder="{{ item.placeholder }}"
-          />
-        </nz-input-wrapper>
+    <nz-form-item [style.display]="item.when ? (item.when(validateForm.value) ? '' : 'none') : ''">
+      @if (layout !== 'login' && item.label) {
+        <nz-form-label [nzSpan]="layout === 'horizontal' ? labelSpan : null" [nzRequired]="!!item.rules?.required">
+          {{ item.label }}
+        </nz-form-label>
       }
-      @if (item.component === 'password') {
-        <nz-input-password>
-          <nz-icon nzInputPrefix nzType="lock" />
-          <input nz-input formControlName="{{ item.name }}" placeholder="{{ item.placeholder }}" />
-        </nz-input-password>
-      }
-      @if (item.component === 'custom') {
-        <div nz-row class="login-form-margin" style="align-items:center;">
-          <div nz-col [nzSpan]="16">
-            <input type="text" nz-input [formControlName]="item.name" [placeholder]="item.placeholder" />
-          </div>
-          <div nz-col [nzSpan]="8">
-            <div style="width: 100px; height: 32px; display: flex; align-items: center;">
-             <ng-container *ngComponentOutlet="item.customComponent ?? null"></ng-container>
+      <nz-form-control [nzSpan]="layout === 'horizontal' ? controlSpan : null" [nzErrorTip]="getErrorTip">
+        @if (item.component === 'input') {
+          @if (layout === 'login') {
+            <nz-input-wrapper>
+              <nz-icon nzInputPrefix nzType="user" />
+              <input type="text" nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" />
+            </nz-input-wrapper>
+          } @else {
+            <input type="text" nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" />
+          }
+        }
+        @if (item.component === 'password') {
+          @if (layout === 'login') {
+            <nz-input-password>
+              <nz-icon nzInputPrefix nzType="lock" />
+              <input nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" />
+            </nz-input-password>
+          } @else {
+            <nz-input-password>
+              <input nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" />
+            </nz-input-password>
+          }
+        }
+        @if (item.component === 'textarea') {
+          <textarea nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" [rows]="item.rows || 3"></textarea>
+        }
+        @if (item.component === 'number') {
+          <nz-input-number
+            [formControlName]="item.name"
+            [nzMin]="item.min ?? 0"
+            [nzMax]="item.max ?? 999999"
+            style="width: 100%"
+          ></nz-input-number>
+        }
+        @if (item.component === 'select') {
+          <nz-select [formControlName]="item.name" [nzPlaceHolder]="item.placeholder || ''" style="width: 100%">
+            @for (opt of item.options || []; track opt.value) {
+              <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+            }
+          </nz-select>
+        }
+        @if (item.component === 'radio') {
+          <nz-radio-group [formControlName]="item.name">
+            @for (opt of item.options || []; track opt.value) {
+              <label nz-radio [nzValue]="opt.value">{{ opt.label }}</label>
+            }
+          </nz-radio-group>
+        }
+        @if (item.component === 'checkbox') {
+          <label nz-checkbox [formControlName]="item.name">{{ item.placeholder || item.label }}</label>
+        }
+        @if (item.component === 'custom') {
+          <div nz-row class="login-form-margin" style="align-items:center;">
+            <div nz-col [nzSpan]="16">
+              <input type="text" nz-input [formControlName]="item.name" [placeholder]="item.placeholder || ''" />
+            </div>
+            <div nz-col [nzSpan]="8">
+              <div style="width: 100px; height: 32px; display: flex; align-items: center;">
+                <ng-container *ngComponentOutlet="item.customComponent ?? null"></ng-container>
+              </div>
             </div>
           </div>
-        </div>
-      }
-    </nz-form-control>
-    <ng-template #getErrorTip let-control>
-      @for (errorMessage of getControlErrorsMessage(control, item.errorMessage); track errorMessage)
-      {
-      <span>{{ errorMessage }}</span>
-      }
-    </ng-template>
-    
-  </nz-form-item>
+        }
+      </nz-form-control>
+      <ng-template #getErrorTip let-control>
+        @for (errorMessage of getControlErrorsMessage(control, item.errorMessage); track errorMessage) {
+          <span>{{ errorMessage }}</span>
+        }
+      </ng-template>
+    </nz-form-item>
   }
-  <!-- Form Errors -->
-  <div style="color: #ff4d4f">
-    {{ getFormErrorsMessage() }}
-  </div>
-  <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
+  <div style="color: #ff4d4f">{{ getFormErrorsMessage() }}</div>
+  @if (showSubmit) {
+    <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'" type="submit">
+      {{ submitText }}
+    </button>
+  }
 </form>

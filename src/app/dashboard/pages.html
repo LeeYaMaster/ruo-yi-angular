@@ -1,70 +1,76 @@
 <nz-layout class="app-layout">
-    <nz-sider class="menu-sidebar"
-              nzCollapsible
-              nzWidth="256px"
-              nzBreakpoint="md"
-              [(nzCollapsed)]="isCollapsed"
-              [nzTrigger]="null"
-              nzTheme="light">
-      <div class="sidebar-logo">
-        <a href="https://ng.ant.design/" target="_blank">
-          <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
-          <h1>若依后台管理系统</h1>
-        </a>
-      </div>
-      <ul nz-menu nzTheme="light" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-        @for(menu of list(); track menu.path) {
-          @if(!menu.hidden) {
-          <li nz-submenu nzMatchRouter [nzTitle]="menu.meta?.title" [nzIcon]="menu.meta?.icon" [nzOpen]="false">
-            @if(menu.children && menu.children.length > 0) {
-              <ul>
-                @for(child of menu.children; track child.path) {
-                  @if(!child.hidden) {
-                    <li nz-menu-item [routerLink]="child.path" [queryParams]="child.query ? (child.query) : null">
-                      <span>{{ child.meta?.title }}</span>
-                    </li>
-                  }
+  <nz-sider class="menu-sidebar"
+            nzCollapsible
+            nzWidth="256px"
+            nzBreakpoint="md"
+            [(nzCollapsed)]="isCollapsed"
+            [nzTrigger]="null"
+            nzTheme="light">
+    <div class="sidebar-logo">
+      <a routerLink="/system/welcome">
+        <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
+        <h1>若依后台管理系统</h1>
+      </a>
+    </div>
+    <ul nz-menu nzTheme="light" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+      @for (menu of list(); track menu.fullPath) {
+        @if (menu.children?.length) {
+          <li nz-submenu [nzTitle]="menu.title" [nzIcon]="menu.icon || 'appstore'">
+            <ul>
+              @for (child of menu.children; track child.fullPath) {
+                @if (child.children?.length) {
+                  <li nz-submenu [nzTitle]="child.title" [nzIcon]="child.icon || null">
+                    <ul>
+                      @for (leaf of child.children; track leaf.fullPath) {
+                        <li nz-menu-item nzMatchRouter [routerLink]="leaf.fullPath">
+                          <span>{{ leaf.title }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </li>
+                } @else {
+                  <li nz-menu-item nzMatchRouter [routerLink]="child.fullPath">
+                    <span>{{ child.title }}</span>
+                  </li>
                 }
-              </ul>
-            }
-            @else {
-              <li nz-menu-item [routerLink]="menu.path" [queryParams]="menu.query ? (menu.query) : null">
-                <span>{{ menu.meta?.title }}</span>
-              </li>
-            }
-          </li>
-          }
-        }
-      </ul>
-    </nz-sider>
-    <nz-layout>
-      <nz-header>
-        <div class="app-header" style="overflow: hidden">
-          <span class="header-trigger" (click)="isCollapsed = !isCollapsed">
-              <i class="trigger"
-                 nz-icon
-                 [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"
-              ></i>
-          </span>
-          <a nz-dropdown [nzDropdownMenu]="menu4" style="float: right;margin-right: 40px;">
-            <nz-avatar nzIcon="user" style="margin-right: 5px;" nzSize="small"
-                       nzSrc="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"></nz-avatar>
-            <!-- {{username}} -->
-            <i nz-icon nzType="down"></i>
-          </a>
-          <nz-dropdown-menu #menu4="nzDropdownMenu">
-            <ul nz-menu>
-              <li nz-menu-item (click)="exit()">退出登录</li>
+              }
             </ul>
-          </nz-dropdown-menu>
-        </div>
-      </nz-header>
-      <nz-content>
-        <div class="inner-content">
-          <router-outlet></router-outlet>
-        </div>
-      </nz-content>
-    </nz-layout>
+          </li>
+        } @else {
+          <li nz-menu-item nzMatchRouter [routerLink]="menu.fullPath">
+            @if (menu.icon) {
+              <span nz-icon [nzType]="menu.icon"></span>
+            }
+            <span>{{ menu.title }}</span>
+          </li>
+        }
+      }
+    </ul>
+  </nz-sider>
+  <nz-layout>
+    <nz-header>
+      <div class="app-header" style="overflow: hidden">
+        <span class="header-trigger" (click)="isCollapsed = !isCollapsed">
+          <i class="trigger" nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"></i>
+        </span>
+        <a nz-dropdown [nzDropdownMenu]="menu4" style="float: right; margin-right: 40px;">
+          <nz-avatar nzIcon="user" style="margin-right: 5px;" nzSize="small"
+                     nzSrc="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"></nz-avatar>
+          {{ username() }}
+          <i nz-icon nzType="down"></i>
+        </a>
+        <nz-dropdown-menu #menu4="nzDropdownMenu">
+          <ul nz-menu>
+            <li nz-menu-item (click)="goProfile()">个人中心</li>
+            <li nz-menu-item (click)="exit()">退出登录</li>
+          </ul>
+        </nz-dropdown-menu>
+      </div>
+    </nz-header>
+    <nz-content>
+      <div class="inner-content">
+        <router-outlet></router-outlet>
+      </div>
+    </nz-content>
   </nz-layout>
-  
-  
+</nz-layout>

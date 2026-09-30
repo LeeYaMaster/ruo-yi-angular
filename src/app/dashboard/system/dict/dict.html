@@ -1,1 +1,87 @@
-<p>dict works!</p>
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>字典名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.dictName" name="dictName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>字典类型</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.dictType" name="dictType" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>状态</nz-form-label><nz-form-control>
+      <nz-select [(ngModel)]="query.status" name="status" nzAllowClear style="width:140px">
+        @for (d of statusOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
+      </nz-select>
+    </nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['system:dict:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
+    <button *hasPermi="['system:dict:edit']" nz-button [disabled]="checkedIds.size!==1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
+    <button *hasPermi="['system:dict:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+    <button *hasPermi="['system:dict:remove']" nz-button (click)="refreshCache()"><span nz-icon nzType="reload"></span>刷新缓存</button>
+  </div>
+  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
+    <thead><tr>
+      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+      <th>字典编号</th><th>字典名称</th><th>字典类型</th><th>状态</th><th>备注</th><th>创建时间</th><th nzWidth="160px">操作</th>
+    </tr></thead>
+    <tbody>
+      @for (row of t.data; track row.dictId) {
+        <tr>
+          <td [nzChecked]="checkedIds.has(row.dictId)" (nzCheckedChange)="onItemChecked(row.dictId,$event)"></td>
+          <td>{{ row.dictId }}</td><td>{{ row.dictName }}</td>
+          <td><a (click)="openData(row)">{{ row.dictType }}</a></td>
+          <td>{{ statusLabel(row.status) }}</td><td>{{ row.remark }}</td><td>{{ parseTime(row.createTime) }}</td>
+          <td><a *hasPermi="['system:dict:edit']" (click)="openEdit(row)">修改</a><span class="sep">|</span><a *hasPermi="['system:dict:remove']" (click)="remove(row)">删除</a></td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<nz-modal [(nzVisible)]="modalVisible" [nzTitle]="modalTitle" [nzOkLoading]="submitting" (nzOnCancel)="modalVisible=false" (nzOnOk)="submit()">
+  <ng-container *nzModalContent>
+    <form nz-form >
+      <nz-form-item><nz-form-label nzRequired>字典名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.dictName" name="dictName" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label nzRequired>字典类型</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.dictType" name="dictType" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>状态</nz-form-label><nz-form-control>
+        <nz-radio-group [(ngModel)]="form.status" name="status">@for (d of statusOptions; track d.value){<label nz-radio [nzValue]="d.value">{{d.label}}</label>}</nz-radio-group>
+      </nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>备注</nz-form-label><nz-form-control><textarea nz-input [(ngModel)]="form.remark" name="remark" rows="3"></textarea></nz-form-control></nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
+
+<nz-drawer [nzVisible]="dataOpen" nzWidth="720" nzTitle="字典数据" (nzOnClose)="dataOpen=false">
+  <ng-container *nzDrawerContent>
+    <div class="toolbar">
+      <button *hasPermi="['system:dict:add']" nz-button nzType="primary" (click)="openAddData()"><span nz-icon nzType="plus"></span>新增</button>
+      <span class="ml8">类型：{{ currentType }}</span>
+    </div>
+    <nz-table [nzData]="dataList" [nzLoading]="dataLoading" [nzFrontPagination]="false" [nzTotal]="dataTotal" [nzPageIndex]="dataQuery.pageNum" [nzPageSize]="dataQuery.pageSize"
+      (nzPageIndexChange)="dataQuery.pageNum=$event; getDataList()" (nzPageSizeChange)="dataQuery.pageSize=$event; dataQuery.pageNum=1; getDataList()" nzBordered nzSize="small">
+      <thead><tr><th>字典标签</th><th>字典键值</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>
+        @for (row of dataList; track row.dictCode) {
+          <tr>
+            <td>{{ row.dictLabel }}</td><td>{{ row.dictValue }}</td><td>{{ row.dictSort }}</td><td>{{ statusLabel(row.status) }}</td>
+            <td><a *hasPermi="['system:dict:edit']" (click)="openEditData(row)">修改</a><span class="sep">|</span><a *hasPermi="['system:dict:remove']" (click)="removeData(row)">删除</a></td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </ng-container>
+</nz-drawer>
+
+<nz-modal [(nzVisible)]="dataModalVisible" [nzTitle]="dataModalTitle" [nzOkLoading]="dataSubmitting" (nzOnCancel)="dataModalVisible=false" (nzOnOk)="submitData()">
+  <ng-container *nzModalContent>
+    <form nz-form >
+      <nz-form-item><nz-form-label>字典类型</nz-form-label><nz-form-control><input nz-input [(ngModel)]="dataForm.dictType" name="dType" disabled /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label nzRequired>数据标签</nz-form-label><nz-form-control><input nz-input [(ngModel)]="dataForm.dictLabel" name="dictLabel" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label nzRequired>数据键值</nz-form-label><nz-form-control><input nz-input [(ngModel)]="dataForm.dictValue" name="dictValue" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label nzRequired>显示排序</nz-form-label><nz-form-control><nz-input-number [(ngModel)]="dataForm.dictSort" name="dictSort" [nzMin]="0" style="width:100%"></nz-input-number></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>状态</nz-form-label><nz-form-control>
+        <nz-radio-group [(ngModel)]="dataForm.status" name="dStatus">@for (d of statusOptions; track d.value){<label nz-radio [nzValue]="d.value">{{d.label}}</label>}</nz-radio-group>
+      </nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>备注</nz-form-label><nz-form-control><textarea nz-input [(ngModel)]="dataForm.remark" name="dRemark" rows="2"></textarea></nz-form-control></nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

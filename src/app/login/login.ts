@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { StorageService } from '../util/storage.service';
 import { TokenKey } from '../util/auth.util';
+import { AuthService } from '../auth/auth.service';
+import { PagesApiService } from '../dashboard/pages.api.service';
 
 @Component({
   selector: 'app-login',
@@ -22,6 +24,8 @@ export class Login {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private storageService = inject(StorageService);
+  private authService = inject(AuthService);
+  private pagesApi = inject(PagesApiService);
   ngOnInit(): void {
     const uuid = this.captchaService.getUuid()
     console.log(uuid);
@@ -32,7 +36,13 @@ export class Login {
     this.loginApiService.login({...event, uuid}).subscribe((res) => {
       if (res.code === 200) {
         this.storageService.set(TokenKey, res.data.token);
-        this.router.navigate(['/system/welcome']);
+        this.pagesApi.getInfo().subscribe({
+          next: (info) => {
+            this.authService.setFromGetInfo(info);
+            this.router.navigate(['/system/welcome']);
+          },
+          error: () => this.router.navigate(['/system/welcome']),
+        });
       } else {
         this.message.error(res.msg);
       }

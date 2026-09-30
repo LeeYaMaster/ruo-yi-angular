@@ -1,0 +1,78 @@
+<div class="page profile-wrap">
+  <nz-card class="profile-side" nzTitle="个人信息">
+    <div class="avatar-box">
+      <img [src]="avatarUrl" alt="avatar" />
+      <div style="margin-top: 12px">
+        <nz-upload [nzShowUploadList]="false" [nzBeforeUpload]="beforeUpload" nzAccept="image/*">
+          <button nz-button nzSize="small"><span nz-icon nzType="upload"></span>更换头像</button>
+        </nz-upload>
+      </div>
+    </div>
+    <ul class="profile-list">
+      <li><span>用户账号</span><span>{{ user().userName }}</span></li>
+      <li><span>手机号码</span><span>{{ user().phonenumber }}</span></li>
+      <li><span>用户邮箱</span><span>{{ user().email }}</span></li>
+      <li><span>所属部门</span><span>{{ user().dept?.deptName || user().deptName }}</span></li>
+      <li><span>所属角色</span><span>{{ roleNames() }}</span></li>
+      <li><span>创建日期</span><span>{{ parseTime(user().createTime) }}</span></li>
+    </ul>
+  </nz-card>
+
+  <nz-card class="profile-main" nzTitle="基本资料">
+    <nz-tabset>
+      <nz-tab nzTitle="基本资料">
+        <form nz-form style="max-width: 480px; margin-top: 16px">
+          <nz-form-item>
+            <nz-form-label nzRequired>用户昵称</nz-form-label>
+            <nz-form-control><input nz-input [(ngModel)]="info.nickName" name="nickName" maxlength="30" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>手机号码</nz-form-label>
+            <nz-form-control><input nz-input [(ngModel)]="info.phonenumber" name="phonenumber" maxlength="11" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>邮箱</nz-form-label>
+            <nz-form-control><input nz-input [(ngModel)]="info.email" name="email" maxlength="50" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>性别</nz-form-label>
+            <nz-form-control>
+              <nz-radio-group [(ngModel)]="info.sex" name="sex">
+                <label nz-radio nzValue="0">男</label>
+                <label nz-radio nzValue="1">女</label>
+              </nz-radio-group>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control>
+              <button nz-button nzType="primary" (click)="saveInfo()">保存</button>
+              <button nz-button nzDanger class="ml8" (click)="close()">关闭</button>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-tab>
+      <nz-tab nzTitle="修改密码">
+        <form nz-form style="max-width: 480px; margin-top: 16px">
+          <nz-form-item>
+            <nz-form-label nzRequired>旧密码</nz-form-label>
+            <nz-form-control><input nz-input type="password" [(ngModel)]="pwd.oldPassword" name="oldPassword" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>新密码</nz-form-label>
+            <nz-form-control><input nz-input type="password" [(ngModel)]="pwd.newPassword" name="newPassword" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label nzRequired>确认密码</nz-form-label>
+            <nz-form-control><input nz-input type="password" [(ngModel)]="pwd.confirmPassword" name="confirmPassword" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-control>
+              <button nz-button nzType="primary" (click)="savePwd()">保存</button>
+              <button nz-button nzDanger class="ml8" (click)="close()">关闭</button>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </nz-tab>
+    </nz-tabset>
+  </nz-card>
+</div>

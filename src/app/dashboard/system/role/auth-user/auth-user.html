@@ -1,0 +1,54 @@
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>用户账号</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.userName" name="userName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>手机号码</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.phonenumber" name="phonenumber" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['system:role:add']" nz-button nzType="primary" (click)="openSelect()"><span nz-icon nzType="plus"></span>添加用户</button>
+    <button *hasPermi="['system:role:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="cancelAll()">批量取消授权</button>
+    <button nz-button (click)="close()">关闭</button>
+  </div>
+  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
+    <thead><tr>
+      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+      <th>用户账号</th><th>用户昵称</th><th>邮箱</th><th>手机</th><th>状态</th><th>创建时间</th><th nzWidth="120px">操作</th>
+    </tr></thead>
+    <tbody>
+      @for (row of t.data; track row.userId) {
+        <tr>
+          <td [nzChecked]="checkedIds.has(row.userId)" (nzCheckedChange)="onItemChecked(row.userId,$event)"></td>
+          <td>{{ row.userName }}</td><td>{{ row.nickName }}</td><td>{{ row.email }}</td><td>{{ row.phonenumber }}</td>
+          <td>{{ statusLabel(row.status) }}</td><td>{{ parseTime(row.createTime) }}</td>
+          <td><a *hasPermi="['system:role:remove']" (click)="cancelOne(row)">取消授权</a></td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<nz-modal [(nzVisible)]="selectVisible" nzTitle="选择用户" [nzWidth]="800" (nzOnCancel)="selectVisible=false" (nzOnOk)="submitSelect()">
+  <ng-container *nzModalContent>
+    <form nz-form nzLayout="inline" class="query-form">
+      <nz-form-item><nz-form-label>用户账号</nz-form-label><nz-form-control><input nz-input [(ngModel)]="selectQuery.userName" name="sUser" (keyup.enter)="selectQuery.pageNum=1; loadSelect()" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>手机号码</nz-form-label><nz-form-control><input nz-input [(ngModel)]="selectQuery.phonenumber" name="sPhone" (keyup.enter)="selectQuery.pageNum=1; loadSelect()" /></nz-form-control></nz-form-item>
+      <nz-form-item><button nz-button nzType="primary" (click)="selectQuery.pageNum=1; loadSelect()">搜索</button></nz-form-item>
+    </form>
+    <nz-table [nzData]="selectList" [nzLoading]="selectLoading" [nzFrontPagination]="false" [nzTotal]="selectTotal" [nzPageIndex]="selectQuery.pageNum" [nzPageSize]="selectQuery.pageSize"
+      (nzPageIndexChange)="selectQuery.pageNum=$event; loadSelect()" (nzPageSizeChange)="selectQuery.pageSize=$event; selectQuery.pageNum=1; loadSelect()"
+      nzSize="small" nzBordered [nzScroll]="{ y: '260px' }">
+      <thead><tr><th nzWidth="50px"></th><th>用户账号</th><th>用户昵称</th><th>邮箱</th><th>手机</th><th>状态</th></tr></thead>
+      <tbody>
+        @for (row of selectList; track row.userId) {
+          <tr>
+            <td [nzChecked]="selectChecked.has(row.userId)" (nzCheckedChange)="$event ? selectChecked.add(row.userId) : selectChecked.delete(row.userId)"></td>
+            <td>{{ row.userName }}</td><td>{{ row.nickName }}</td><td>{{ row.email }}</td><td>{{ row.phonenumber }}</td><td>{{ statusLabel(row.status) }}</td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </ng-container>
+</nz-modal>

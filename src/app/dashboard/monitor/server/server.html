@@ -1,1 +1,14 @@
-<p>server works!</p>
+<div class="page">
+  <div class="toolbar">
+    <button nz-button nzType="primary" (click)="load()"><span nz-icon nzType="reload"></span>刷新</button>
+  </div>
+  <nz-spin [nzSpinning]="loading()">
+    <div class="cards">
+      <nz-card nzTitle="CPU"><pre class="pre">{{ data()?.cpu | json }}</pre></nz-card>
+      <nz-card nzTitle="内存"><pre class="pre">{{ data()?.mem | json }}</pre></nz-card>
+      <nz-card nzTitle="服务器"><pre class="pre">{{ data()?.sys | json }}</pre></nz-card>
+      <nz-card nzTitle="JVM"><pre class="pre">{{ data()?.jvm | json }}</pre></nz-card>
+      <nz-card nzTitle="磁盘" style="grid-column: 1 / -1"><pre class="pre">{{ data()?.sysFiles | json }}</pre></nz-card>
+    </div>
+  </nz-spin>
+</div>

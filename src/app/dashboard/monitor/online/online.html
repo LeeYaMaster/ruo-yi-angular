@@ -1,1 +1,24 @@
-<p>online works!</p>
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>登录地址</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.ipaddr" name="ipaddr" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>用户名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.userName" name="userName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <nz-table [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="true" [nzTotal]="total()" nzBordered nzSize="middle">
+    <thead><tr>
+      <th>会话编号</th><th>登录名称</th><th>主机</th><th>登录地点</th><th>浏览器</th><th>操作系统</th><th>登录时间</th><th nzWidth="80px">操作</th>
+    </tr></thead>
+    <tbody>
+      @for (row of list(); track row.tokenId) {
+        <tr>
+          <td>{{ row.tokenId }}</td><td>{{ row.userName }}</td><td>{{ row.ipaddr }}</td><td>{{ row.loginLocation }}</td>
+          <td>{{ row.browser }}</td><td>{{ row.os }}</td><td>{{ parseTime(row.loginTime) }}</td>
+          <td><a *hasPermi="['monitor:online:forceLogout']" (click)="forceLogout(row)">强退</a></td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>

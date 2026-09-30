@@ -48,6 +48,19 @@ export class BaseHttp {
     return this.httpClient.put(Config.API_URL + url, data, { observe: 'body' });
   }
 
+  /** PUT 且参数走 query（Nest updateAuthRole 等） */
+  public putWithParams(url: string, params?: any, data: any = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.httpClient.put(Config.API_URL + url, data, { params: httpParams, observe: 'body' });
+  }
+
   /**
    * DELETE 请求
    * @param url 请求地址

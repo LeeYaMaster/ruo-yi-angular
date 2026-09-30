@@ -1,0 +1,59 @@
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>任务名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.jobName" name="jobName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>任务组名</nz-form-label><nz-form-control>
+      <nz-select [(ngModel)]="query.jobGroup" name="jobGroup" nzAllowClear style="width:140px">
+        @for (d of groupOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
+      </nz-select>
+    </nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>执行状态</nz-form-label><nz-form-control>
+      <nz-select [(ngModel)]="query.status" name="status" nzAllowClear style="width:140px">
+        @for (d of statusOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
+      </nz-select>
+    </nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['monitor:job:remove']" nz-button nzDanger (click)="clean()"><span nz-icon nzType="delete"></span>清空</button>
+    <button *hasPermi="['monitor:job:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
+    <button nz-button (click)="close()">关闭</button>
+  </div>
+  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
+    <thead><tr>
+      <th>日志编号</th><th>任务名称</th><th>任务组名</th><th>调用目标</th><th>日志信息</th><th>执行状态</th><th>执行时间</th><th nzWidth="80px">操作</th>
+    </tr></thead>
+    <tbody>
+      @for (row of t.data; track row.jobLogId) {
+        <tr>
+          <td>{{ row.jobLogId }}</td>
+          <td>{{ row.jobName }}</td>
+          <td>{{ groupLabel(row.jobGroup) }}</td>
+          <td>{{ row.invokeTarget }}</td>
+          <td>{{ row.jobMessage }}</td>
+          <td>{{ statusLabel(row.status) }}</td>
+          <td>{{ parseTime(row.createTime) }}</td>
+          <td><a (click)="showDetail(row)">详细</a></td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<nz-modal [(nzVisible)]="detailVisible" nzTitle="调度日志详细" [nzFooter]="null" (nzOnCancel)="detailVisible=false" [nzWidth]="700">
+  <ng-container *nzModalContent>
+    <p><b>日志序号：</b>{{ detail.jobLogId }}</p>
+    <p><b>任务名称：</b>{{ detail.jobName }}</p>
+    <p><b>任务分组：</b>{{ groupLabel(detail.jobGroup) }}</p>
+    <p><b>调用方法：</b>{{ detail.invokeTarget }}</p>
+    <p><b>日志信息：</b>{{ detail.jobMessage }}</p>
+    <p><b>执行状态：</b>{{ statusLabel(detail.status) }}</p>
+    <p><b>执行时间：</b>{{ parseTime(detail.createTime) }}</p>
+    @if (detail.exceptionInfo) {
+      <p><b>异常信息：</b></p>
+      <pre style="white-space:pre-wrap;background:#fafafa;padding:12px">{{ detail.exceptionInfo }}</pre>
+    }
+  </ng-container>
+</nz-modal>

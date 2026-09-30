@@ -1,2 +1,11 @@
-<p>welcome works!</p>
-<!-- <app-builder-form [formConfig]="formConfig" [groupValidators]="groupValidators"></app-builder-form> -->
+<div class="welcome">
+  <nz-card nzTitle="欢迎使用若依 Angular 管理端">
+    <p>你好，<b>{{ nickName() }}</b>。</p>
+    <p>当前账号权限标识数量：{{ permCount() }}</p>
+    <p>左侧菜单来自后端 <code>getRouters</code>。可从右上角进入「个人中心」修改资料与密码。</p>
+    <ul>
+      <li>系统管理：用户 / 角色 / 菜单 / 部门 / 岗位 / 字典 / 参数 / 通知</li>
+      <li>日志与监控：操作日志、登录日志、在线用户、定时任务及日志、缓存、服务</li>
+    </ul>
+  </nz-card>
+</div>

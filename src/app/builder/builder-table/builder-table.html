@@ -1,48 +1,53 @@
-<div class="send-request">
-    <button
-      nz-button
-      nzType="primary"
-      [disabled]="setOfCheckedId.size === 0"
-      (click)="sendRequest()"
-    >
-      Send Request
-    </button>
-    <span>Selected {{ setOfCheckedId.size }} items</span>
-  </div>
-  <nz-table
-    #rowSelectionTable
-    nzSize="middle" 
-    nzShowPagination
-    nzShowSizeChanger
-    [nzData]="listOfData"
-    (nzCurrentPageDataChange)="onCurrentPageDataChange($event)"
-  >
-    <thead>
-      <tr>
+<nz-table
+  #tbl
+  [nzData]="data"
+  [nzLoading]="loading"
+  [nzFrontPagination]="false"
+  [nzTotal]="total"
+  [nzPageIndex]="pageIndex"
+  [nzPageSize]="pageSize"
+  [nzShowSizeChanger]="true"
+  [nzBordered]="bordered"
+  [nzSize]="size"
+  (nzPageIndexChange)="pageIndexChange.emit($event)"
+  (nzPageSizeChange)="pageSizeChange.emit($event)"
+  (nzCurrentPageDataChange)="onCurrentPageDataChange($event)"
+>
+  <thead>
+    <tr>
+      @if (showCheckbox) {
         <th
           [nzChecked]="checked"
           [nzIndeterminate]="indeterminate"
-          nzLabel="Select all"
           (nzCheckedChange)="onAllChecked($event)"
         ></th>
-        <th>Name</th>
-        <th>Age</th>
-        <th>Address</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (data of rowSelectionTable.data; track data) {
-        <tr>
-          <td
-            [nzChecked]="setOfCheckedId.has(data.id)"
-            [nzDisabled]="data.disabled"
-            [nzLabel]="data.name"
-            (nzCheckedChange)="onItemChecked(data.id, $event)"
-          ></td>
-          <td>{{ data.name }}</td>
-          <td>{{ data.age }}</td>
-          <td>{{ data.address }}</td>
-        </tr>
       }
-    </tbody>
-  </nz-table>
+      @for (col of columns; track col.key) {
+        <th [nzWidth]="col.width || null" [nzAlign]="col.align || null">{{ col.title }}</th>
+      }
+      @if (actionsTpl) {
+        <th [nzWidth]="actionWidth">操作</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of tbl.data; track trackRow($index, row)) {
+      <tr>
+        @if (showCheckbox) {
+          <td
+            [nzChecked]="setOfCheckedId.has(row[rowKey])"
+            (nzCheckedChange)="onItemChecked(row[rowKey], $event)"
+          ></td>
+        }
+        @for (col of columns; track col.key) {
+          <td [nzAlign]="col.align || null">{{ cellValue(row, col) }}</td>
+        }
+        @if (actionsTpl) {
+          <td>
+            <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
+          </td>
+        }
+      </tr>
+    }
+  </tbody>
+</nz-table>

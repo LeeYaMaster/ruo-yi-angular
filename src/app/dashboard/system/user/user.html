@@ -1,1 +1,227 @@
-<p>user works!</p>
+<div class="page-wrap">
+  <div class="dept-pane">
+    <input nz-input placeholder="请输入部门名称" [(ngModel)]="deptFilter" style="margin-bottom: 12px" />
+    <nz-tree
+      [nzData]="deptNodes()"
+      nzShowLine
+      (nzClick)="onDeptClick($event)"
+    ></nz-tree>
+  </div>
+
+  <div class="main-pane">
+    <form nz-form nzLayout="inline" class="query-form">
+      <nz-form-item>
+        <nz-form-label>用户账号</nz-form-label>
+        <nz-form-control>
+          <input nz-input [(ngModel)]="query.userName" name="userName" placeholder="请输入用户账号" (keyup.enter)="onQuery()" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>手机号码</nz-form-label>
+        <nz-form-control>
+          <input nz-input [(ngModel)]="query.phonenumber" name="phonenumber" placeholder="请输入手机号码" (keyup.enter)="onQuery()" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>状态</nz-form-label>
+        <nz-form-control>
+          <nz-select [(ngModel)]="query.status" name="status" nzAllowClear nzPlaceHolder="用户状态" style="width: 160px">
+            @for (d of statusOptions; track d.value) {
+              <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+        <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+      </nz-form-item>
+    </form>
+
+    <div class="toolbar">
+      <button *hasPermi="['system:user:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
+      <button *hasPermi="['system:user:edit']" nz-button nzType="default" [disabled]="checkedIds.size !== 1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
+      <button *hasPermi="['system:user:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+      <button *hasPermi="['system:user:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
+    </div>
+
+    <nz-table
+      #userTable
+      [nzData]="userList()"
+      [nzLoading]="loading()"
+      [nzFrontPagination]="false"
+      [nzTotal]="total()"
+      [nzPageIndex]="query.pageNum"
+      [nzPageSize]="query.pageSize"
+      [nzShowSizeChanger]="true"
+      (nzPageIndexChange)="onPageIndexChange($event)"
+      (nzPageSizeChange)="onPageSizeChange($event)"
+      nzSize="middle"
+      nzBordered
+    >
+      <thead>
+        <tr>
+          <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+          <th>用户编号</th>
+          <th>用户账号</th>
+          <th>用户昵称</th>
+          <th>部门</th>
+          <th>手机号码</th>
+          <th>状态</th>
+          <th>创建时间</th>
+          <th nzWidth="180px">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of userTable.data; track row.userId) {
+          <tr>
+            <td
+              [nzChecked]="checkedIds.has(row.userId)"
+              [nzDisabled]="row.userId === 1"
+              (nzCheckedChange)="onItemChecked(row.userId, $event)"
+            ></td>
+            <td>{{ row.userId }}</td>
+            <td>{{ row.userName }}</td>
+            <td>{{ row.nickName }}</td>
+            <td>{{ row.dept?.deptName || row.deptName }}</td>
+            <td>{{ row.phonenumber }}</td>
+            <td>
+              <nz-switch
+                [ngModel]="row.status === '0'"
+                (ngModelChange)="onStatusChange(row, $event)"
+                [nzDisabled]="row.userId === 1"
+              ></nz-switch>
+            </td>
+            <td>{{ parseTime(row.createTime) }}</td>
+            <td>
+              @if (row.userId !== 1) {
+                <a *hasPermi="['system:user:edit']" (click)="openEdit(row)">修改</a>
+                <span class="sep">|</span>
+                <a *hasPermi="['system:user:remove']" (click)="remove(row)">删除</a>
+                <span class="sep">|</span>
+                <a *hasPermi="['system:user:resetPwd']" (click)="resetPwd(row)">重置</a>
+                <span class="sep">|</span>
+                <a *hasPermi="['system:user:edit']" (click)="goAuthRole(row)">分配角色</a>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </div>
+</div>
+
+<nz-modal
+  [(nzVisible)]="modalVisible"
+  [nzTitle]="modalTitle"
+  [nzWidth]="680"
+  [nzOkLoading]="submitting"
+  (nzOnCancel)="modalVisible = false"
+  (nzOnOk)="submit()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form nzLayout="horizontal" >
+      @if (!form.userId) {
+        <div class="form-row">
+          <nz-form-item class="half">
+            <nz-form-label nzRequired>用户账号</nz-form-label>
+            <nz-form-control>
+              <input nz-input [(ngModel)]="form.userName" name="userName" maxlength="30" />
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item class="half">
+            <nz-form-label nzRequired>用户密码</nz-form-label>
+            <nz-form-control>
+              <input nz-input type="password" [(ngModel)]="form.password" name="password" maxlength="20" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      }
+      <div class="form-row">
+        <nz-form-item class="half">
+          <nz-form-label nzRequired>用户昵称</nz-form-label>
+          <nz-form-control>
+            <input nz-input [(ngModel)]="form.nickName" name="nickName" maxlength="30" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="half">
+          <nz-form-label>归属部门</nz-form-label>
+          <nz-form-control>
+            <nz-tree-select
+              style="width: 100%"
+              [nzNodes]="deptNodes()"
+              [(ngModel)]="form.deptId"
+              name="deptId"
+              nzPlaceHolder="请选择归属部门"
+              nzAllowClear
+            ></nz-tree-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div class="form-row">
+        <nz-form-item class="half">
+          <nz-form-label>手机号码</nz-form-label>
+          <nz-form-control>
+            <input nz-input [(ngModel)]="form.phonenumber" name="phonenumber" maxlength="11" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="half">
+          <nz-form-label>邮箱</nz-form-label>
+          <nz-form-control>
+            <input nz-input [(ngModel)]="form.email" name="email" maxlength="50" />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div class="form-row">
+        <nz-form-item class="half">
+          <nz-form-label>用户性别</nz-form-label>
+          <nz-form-control>
+            <nz-select [(ngModel)]="form.sex" name="sex" style="width: 100%">
+              @for (d of sexOptions; track d.value) {
+                <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="half">
+          <nz-form-label>状态</nz-form-label>
+          <nz-form-control>
+            <nz-radio-group [(ngModel)]="form.status" name="status">
+              @for (d of statusOptions; track d.value) {
+                <label nz-radio [nzValue]="d.value">{{ d.label }}</label>
+              }
+            </nz-radio-group>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div class="form-row">
+        <nz-form-item class="half">
+          <nz-form-label>岗位</nz-form-label>
+          <nz-form-control>
+            <nz-select [(ngModel)]="form.postIds" name="postIds" nzMode="multiple" style="width: 100%" nzPlaceHolder="请选择">
+              @for (p of postOptions; track p.postId) {
+                <nz-option [nzValue]="p.postId" [nzLabel]="p.postName" [nzDisabled]="p.status == '1' || p.status == 1"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item class="half">
+          <nz-form-label>角色</nz-form-label>
+          <nz-form-control>
+            <nz-select [(ngModel)]="form.roleIds" name="roleIds" nzMode="multiple" style="width: 100%" nzPlaceHolder="请选择">
+              @for (r of roleOptions; track r.roleId) {
+                <nz-option [nzValue]="r.roleId" [nzLabel]="r.roleName" [nzDisabled]="r.status == '1' || r.status == 1"></nz-option>
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <nz-form-item>
+        <nz-form-label>备注</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input [(ngModel)]="form.remark" name="remark" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

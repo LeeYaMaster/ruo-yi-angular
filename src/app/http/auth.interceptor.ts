@@ -43,14 +43,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // 获取token
   const token = storageService.get(TokenKey);
 
-  // 克隆请求，设置headers
-  let clonedReq: HttpRequest<any> = req.clone({
-    setHeaders: {
-      'Content-Type': 'application/json;charset=utf-8'
-    }
-  });
+  // FormData 上传时不要强行设 JSON Content-Type
+  const isFormData = typeof FormData !== 'undefined' && req.body instanceof FormData;
+  let clonedReq: HttpRequest<any> = isFormData
+    ? req.clone()
+    : req.clone({
+        setHeaders: {
+          'Content-Type': 'application/json;charset=utf-8'
+        }
+      });
 
-  // 如果需要token且存在token，则添加Authorization头
   if (token && isToken) {
     clonedReq = clonedReq.clone({
       setHeaders: {

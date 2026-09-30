@@ -1,1 +1,58 @@
-<p>notice works!</p>
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>公告标题</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.noticeTitle" name="noticeTitle" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>操作人员</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.createBy" name="createBy" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>类型</nz-form-label><nz-form-control>
+      <nz-select [(ngModel)]="query.noticeType" name="noticeType" nzAllowClear style="width:140px">
+        @for (d of typeOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
+      </nz-select>
+    </nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['system:notice:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
+    <button *hasPermi="['system:notice:edit']" nz-button [disabled]="checkedIds.size!==1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
+    <button *hasPermi="['system:notice:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+  </div>
+
+  <app-builder-table
+    #bt
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [total]="total()"
+    [pageIndex]="query.pageNum"
+    [pageSize]="query.pageSize"
+    rowKey="noticeId"
+    (pageIndexChange)="onPageIndexChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (selectionChange)="onSelection($event)"
+  >
+    <ng-template #actions let-row>
+      <a *hasPermi="['system:notice:edit']" (click)="openEdit(row)">修改</a>
+      <span class="sep">|</span>
+      <a *hasPermi="['system:notice:remove']" (click)="remove(row)">删除</a>
+    </ng-template>
+  </app-builder-table>
+</div>
+
+<nz-modal
+  [(nzVisible)]="modalVisible"
+  [nzTitle]="modalTitle"
+  [nzWidth]="720"
+  [nzFooter]="modalFooter"
+  (nzOnCancel)="modalVisible=false"
+>
+  <ng-container *nzModalContent>
+    @if (modalVisible) {
+      <app-builder-form #bf layout="vertical" [showSubmit]="false" [formConfig]="formConfig"></app-builder-form>
+    }
+  </ng-container>
+</nz-modal>
+<ng-template #modalFooter>
+  <button nz-button (click)="modalVisible=false">取 消</button>
+  <button nz-button nzType="primary" [nzLoading]="submitting" (click)="save()">确 定</button>
+</ng-template>
