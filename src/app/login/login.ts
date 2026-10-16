@@ -5,7 +5,7 @@ import { BuilderForm } from '../builder/builder-form/builder-form';
 import { FormConfig } from '../builder/builder-form/builder-form.model';
 import { Captcha} from '../custom-form/captcha/captcha';
 import { CaptchaService } from '../custom-form/captcha/captcha.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { StorageService } from '../util/storage.service';
 import { TokenKey } from '../util/auth.util';
@@ -14,7 +14,7 @@ import { PagesApiService } from '../dashboard/pages.api.service';
 
 @Component({
   selector: 'app-login',
-  imports: [BuilderForm],
+  imports: [BuilderForm, RouterLink],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
 })

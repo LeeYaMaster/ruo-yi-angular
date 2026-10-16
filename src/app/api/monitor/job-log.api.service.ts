@@ -10,6 +10,10 @@ export class JobLogApiService {
     return this.http.get('monitor/jobLog/list', query);
   }
 
+  remove(jobLogId: number | string): Observable<any> {
+    return this.http.delete('monitor/jobLog/' + jobLogId);
+  }
+
   clean(): Observable<any> {
     return this.http.delete('monitor/jobLog/clean');
   }

@@ -46,6 +46,9 @@ export class JobLog implements OnInit {
   detailVisible = false;
   detail: any = {};
   parseTime = parseTime;
+  checkedIds = new Set<number>();
+  allChecked = false;
+  indeterminate = false;
 
   ngOnInit(): void {
     const jobName = this.route.snapshot.queryParamMap.get('jobName');
@@ -77,6 +80,31 @@ export class JobLog implements OnInit {
   }
   onPageIndexChange(p: number): void { this.query.pageNum = p; this.getList(); }
   onPageSizeChange(s: number): void { this.query.pageSize = s; this.query.pageNum = 1; this.getList(); }
+
+
+  onItemChecked(id: number, c: boolean) { c ? this.checkedIds.add(id) : this.checkedIds.delete(id); this.refreshChecked(); }
+  onAllChecked(c: boolean) { this.list().forEach(r => c ? this.checkedIds.add(r.jobLogId) : this.checkedIds.delete(r.jobLogId)); this.refreshChecked(); }
+  refreshChecked() {
+    const n = this.list().length;
+    const c = this.list().filter(r => this.checkedIds.has(r.jobLogId)).length;
+    this.allChecked = n > 0 && c === n;
+    this.indeterminate = c > 0 && c < n;
+  }
+
+  remove(row?: any): void {
+    const ids = row ? String(row.jobLogId) : [...this.checkedIds].join(',');
+    if (!ids) return;
+    this.modal.confirm({
+      nzTitle: '确认删除',
+      nzContent: '是否确认删除选中的调度日志？',
+      nzOnOk: () => new Promise<void>((resolve, reject) => {
+        this.api.remove(ids).subscribe({
+          next: () => { this.message.success('删除成功'); this.checkedIds.clear(); this.getList(); resolve(); },
+          error: () => reject(),
+        });
+      }),
+    });
+  }
 
   clean(): void {
     this.modal.confirm({

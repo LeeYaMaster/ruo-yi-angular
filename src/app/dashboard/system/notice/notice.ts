@@ -138,9 +138,9 @@ export class Notice implements OnInit {
         name: 'noticeContent',
         component: 'textarea',
         label: '内容',
-        placeholder: '请输入内容',
+        placeholder: '支持 HTML 富文本，例如 <b>加粗</b>、<p>段落</p>',
         defaultValue: data.noticeContent ?? '',
-        rows: 6,
+        rows: 10,
       },
     ];
   }

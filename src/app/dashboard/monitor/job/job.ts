@@ -16,6 +16,7 @@ import { DictService, DictOption } from '../../../api/dict.service';
 import { parsePage, parseTime } from '../../../util/ruoyi.util';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
 import { Router } from '@angular/router';
+import { DownloadService } from '../../../http/download.service';
 
 @Component({
   selector: 'app-job',
@@ -28,6 +29,7 @@ export class Job implements OnInit {
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
   private router = inject(Router);
+  private download = inject(DownloadService);
   loading = signal(false); list = signal<any[]>([]); total = signal(0);
   statusOptions: DictOption[] = []; groupOptions: DictOption[] = [];
   query = { pageNum: 1, pageSize: 10, jobName: '', jobGroup: undefined as string | undefined, status: undefined as string | undefined };
@@ -93,6 +95,10 @@ export class Job implements OnInit {
     });
   }
   groupLabel(v: string) { return this.dict.label(this.groupOptions, v); }
+
+  export(): void {
+    this.download.download('monitor/job/export', { ...this.query }, `job_${Date.now()}.xlsx`);
+  }
 
   goJobLog(row?: any): void {
     const q: any = {};

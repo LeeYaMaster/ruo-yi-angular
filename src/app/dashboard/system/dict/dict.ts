@@ -16,6 +16,7 @@ import { DictApiService } from '../../../api/system/dict.api.service';
 import { DictService, DictOption } from '../../../api/dict.service';
 import { parsePage, parseTime } from '../../../util/ruoyi.util';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
+import { DownloadService } from '../../../http/download.service';
 
 @Component({
   selector: 'app-dict',
@@ -27,6 +28,7 @@ export class Dict implements OnInit {
   private dict = inject(DictService);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private download = inject(DownloadService);
 
   loading = signal(false); list = signal<any[]>([]); total = signal(0);
   statusOptions: DictOption[] = [];
@@ -82,6 +84,10 @@ export class Dict implements OnInit {
       this.api.removeType(ids).subscribe({ next: () => { this.message.success('删除成功'); this.dict.clear(); this.getList(); resolve(); }, error: () => reject() });
     })});
   }
+  export(): void {
+    this.download.download('system/dict/type/export', { ...this.query }, `dict_${Date.now()}.xlsx`);
+  }
+
   refreshCache() { this.api.refreshCache().subscribe({ next: () => { this.dict.clear(); this.message.success('刷新成功'); } }); }
   statusLabel(v: string) { return this.dict.label(this.statusOptions, v); }
 

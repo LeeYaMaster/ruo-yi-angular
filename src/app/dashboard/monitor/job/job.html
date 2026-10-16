@@ -21,6 +21,7 @@
     <button *hasPermi="['monitor:job:edit']" nz-button [disabled]="checkedIds.size!==1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
     <button *hasPermi="['monitor:job:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
     <button *hasPermi="['monitor:job:query']" nz-button (click)="goJobLog()"><span nz-icon nzType="file-text"></span>日志</button>
+    <button *hasPermi="['monitor:job:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
   </div>
   <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
     <thead><tr>

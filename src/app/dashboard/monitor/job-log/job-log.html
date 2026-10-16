@@ -17,17 +17,20 @@
     </nz-form-item>
   </form>
   <div class="toolbar">
+    <button *hasPermi="['monitor:job:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
     <button *hasPermi="['monitor:job:remove']" nz-button nzDanger (click)="clean()"><span nz-icon nzType="delete"></span>清空</button>
     <button *hasPermi="['monitor:job:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
     <button nz-button (click)="close()">关闭</button>
   </div>
   <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
     <thead><tr>
+      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
       <th>日志编号</th><th>任务名称</th><th>任务组名</th><th>调用目标</th><th>日志信息</th><th>执行状态</th><th>执行时间</th><th nzWidth="80px">操作</th>
     </tr></thead>
     <tbody>
       @for (row of t.data; track row.jobLogId) {
         <tr>
+          <td [nzChecked]="checkedIds.has(row.jobLogId)" (nzCheckedChange)="onItemChecked(row.jobLogId,$event)"></td>
           <td>{{ row.jobLogId }}</td>
           <td>{{ row.jobName }}</td>
           <td>{{ groupLabel(row.jobGroup) }}</td>
@@ -35,7 +38,7 @@
           <td>{{ row.jobMessage }}</td>
           <td>{{ statusLabel(row.status) }}</td>
           <td>{{ parseTime(row.createTime) }}</td>
-          <td><a (click)="showDetail(row)">详细</a></td>
+          <td><a (click)="showDetail(row)">详细</a><span class="sep">|</span><a *hasPermi="['monitor:job:remove']" (click)="remove(row)">删除</a></td>
         </tr>
       }
     </tbody>

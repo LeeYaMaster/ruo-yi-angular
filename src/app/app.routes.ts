@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './login/login';
+import { Register } from './register/register';
 import { Pages } from './dashboard/pages';
 import { Welcome } from './dashboard/welcome/welcome';
 import { User } from './dashboard/system/user/user';
@@ -23,9 +24,13 @@ import { JobLog } from './dashboard/monitor/job-log/job-log';
 import { Online } from './dashboard/monitor/online/online';
 import { Server } from './dashboard/monitor/server/server';
 
+import { Gen } from './dashboard/tool/gen/gen';
+import { Swagger } from './dashboard/tool/swagger/swagger';
+
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/login' },
   { path: 'login', component: Login },
+  { path: 'register', component: Register },
   {
     path: 'system',
     component: Pages,
@@ -61,6 +66,14 @@ export const routes: Routes = [
       { path: 'server', component: Server },
       { path: 'operlog', component: Operlog },
       { path: 'logininfor', component: Logininfor },
+    ],
+  },
+  {
+    path: 'tool',
+    component: Pages,
+    children: [
+      { path: 'gen', component: Gen },
+      { path: 'swagger', component: Swagger },
     ],
   },
 ];

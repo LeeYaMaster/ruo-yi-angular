@@ -1,0 +1,76 @@
+<div class="page">
+  <form nz-form nzLayout="inline" class="query-form">
+    <nz-form-item><nz-form-label>表名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.tableName" name="tableName" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item><nz-form-label>表描述</nz-form-label><nz-form-control><input nz-input [(ngModel)]="query.tableComment" name="tableComment" (keyup.enter)="onQuery()" /></nz-form-control></nz-form-item>
+    <nz-form-item>
+      <button nz-button nzType="primary" (click)="onQuery()"><span nz-icon nzType="search"></span>搜索</button>
+      <button nz-button class="ml8" (click)="onReset()"><span nz-icon nzType="reload"></span>重置</button>
+    </nz-form-item>
+  </form>
+  <div class="toolbar">
+    <button *hasPermi="['tool:gen:code']" nz-button nzType="primary" [disabled]="!checkedNames.size" (click)="generate()"><span nz-icon nzType="download"></span>生成</button>
+    <button *hasPermi="['tool:gen:import']" nz-button (click)="openImport()"><span nz-icon nzType="upload"></span>导入</button>
+    <button *hasPermi="['tool:gen:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+  </div>
+  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
+    <thead>
+      <tr>
+        <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
+        <th>表名称</th><th>表描述</th><th>实体</th><th>创建时间</th><th>更新时间</th><th nzWidth="260px">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of t.data; track row.tableId) {
+        <tr>
+          <td [nzChecked]="checkedIds.has(row.tableId)" (nzCheckedChange)="onItemChecked(row,$event)"></td>
+          <td>{{ row.tableName }}</td>
+          <td>{{ row.tableComment }}</td>
+          <td>{{ row.className }}</td>
+          <td>{{ parseTime(row.createTime) }}</td>
+          <td>{{ parseTime(row.updateTime) }}</td>
+          <td>
+            <a *hasPermi="['tool:gen:preview']" (click)="preview(row)">预览</a><span class="sep">|</span>
+            <a *hasPermi="['tool:gen:code']" (click)="generate(row)">生成</a><span class="sep">|</span>
+            <a *hasPermi="['tool:gen:edit']" (click)="synch(row)">同步</a><span class="sep">|</span>
+            <a *hasPermi="['tool:gen:remove']" (click)="remove(row)">删除</a>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<nz-modal [(nzVisible)]="importVisible" nzTitle="导入表" [nzWidth]="800" (nzOnCancel)="importVisible=false" (nzOnOk)="submitImport()">
+  <ng-container *nzModalContent>
+    <form nz-form nzLayout="inline" class="query-form">
+      <nz-form-item><nz-form-label>表名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="dbQuery.tableName" name="dbTableName" /></nz-form-control></nz-form-item>
+      <nz-form-item><nz-form-label>表描述</nz-form-label><nz-form-control><input nz-input [(ngModel)]="dbQuery.tableComment" name="dbTableComment" /></nz-form-control></nz-form-item>
+      <nz-form-item><button nz-button nzType="primary" (click)="loadDb()">搜索</button></nz-form-item>
+    </form>
+    <nz-table [nzData]="dbList" [nzLoading]="dbLoading" [nzFrontPagination]="false" [nzTotal]="dbTotal" [nzPageIndex]="dbQuery.pageNum" [nzPageSize]="dbQuery.pageSize" (nzPageIndexChange)="dbQuery.pageNum=$event; loadDb()" nzBordered nzSize="small" [nzScroll]="{ y: '360px' }">
+      <thead><tr><th nzWidth="50px"></th><th>表名称</th><th>表描述</th><th>创建时间</th></tr></thead>
+      <tbody>
+        @for (row of dbList; track row.tableName) {
+          <tr>
+            <td [nzChecked]="dbChecked.has(row.tableName)" (nzCheckedChange)="onDbItem(row.tableName,$event)"></td>
+            <td>{{ row.tableName }}</td>
+            <td>{{ row.tableComment }}</td>
+            <td>{{ parseTime(row.createTime) }}</td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </ng-container>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="previewVisible" nzTitle="代码预览" [nzWidth]="900" [nzFooter]="null" (nzOnCancel)="previewVisible=false">
+  <ng-container *nzModalContent>
+    <nz-tabset [(nzSelectedIndex)]="previewActive">
+      @for (tab of previewTabs; track tab.key) {
+        <nz-tab [nzTitle]="tab.label">
+          <pre class="pre">{{ tab.content }}</pre>
+        </nz-tab>
+      }
+    </nz-tabset>
+  </ng-container>
+</nz-modal>

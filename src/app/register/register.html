@@ -1,0 +1,34 @@
+<div class="register-page">
+  <nz-card nzTitle="用户注册" class="card">
+    @if (!enabled()) {
+      <p>当前系统未开启注册功能，请联系管理员。</p>
+      <a routerLink="/login">返回登录</a>
+    } @else {
+      <form nz-form>
+        <nz-form-item>
+          <nz-form-label nzRequired>账号</nz-form-label>
+          <nz-form-control><input nz-input [(ngModel)]="form.userName" name="userName" placeholder="账号" /></nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>密码</nz-form-label>
+          <nz-form-control><input nz-input type="password" [(ngModel)]="form.password" name="password" placeholder="密码" /></nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>确认密码</nz-form-label>
+          <nz-form-control><input nz-input type="password" [(ngModel)]="form.confirmPassword" name="confirmPassword" placeholder="确认密码" /></nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>验证码</nz-form-label>
+          <nz-form-control>
+            <div class="captcha-row">
+              <input nz-input [(ngModel)]="form.code" name="code" placeholder="验证码" style="flex:1" />
+              <app-captcha></app-captcha>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+        <button nz-button nzType="primary" [nzLoading]="loading" style="width:100%" (click)="submit()">注册</button>
+        <div class="link"><a routerLink="/login">使用已有账户登录</a></div>
+      </form>
+    }
+  </nz-card>
+</div>

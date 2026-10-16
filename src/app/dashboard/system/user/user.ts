@@ -18,6 +18,8 @@ import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTreeSelectModule } from 'ng-zorro-antd/tree-select';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzUploadModule, NzUploadFile } from 'ng-zorro-antd/upload';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { UserApiService } from '../../../api/system/user.api.service';
 import { DictService, DictOption } from '../../../api/dict.service';
 import { parsePage, parseTime } from '../../../util/ruoyi.util';
@@ -47,6 +49,8 @@ import { Router } from '@angular/router';
     NzTreeSelectModule,
     NzToolTipModule,
     HasPermiDirective,
+    NzUploadModule,
+    NzCheckboxModule,
   ],
   templateUrl: './user.html',
   styleUrl: './user.less',
@@ -91,6 +95,12 @@ export class User implements OnInit {
   form: any = this.emptyForm();
 
   parseTime = parseTime;
+  importVisible = false;
+  importSubmitting = false;
+  updateSupport = false;
+  importFile: File | null = null;
+  importFileList: NzUploadFile[] = [];
+
 
   ngOnInit(): void {
     this.dictService.getDict('sys_normal_disable').subscribe((d) => (this.statusOptions = d));
@@ -343,6 +353,50 @@ export class User implements OnInit {
 
   export(): void {
     this.download.download('system/user/export', { ...this.query, deptId: this.selectedDeptId }, `user_${Date.now()}.xlsx`);
+  }
+
+
+  openImport(): void {
+    this.importVisible = true;
+    this.updateSupport = false;
+    this.importFile = null;
+    this.importFileList = [];
+  }
+
+  beforeImportUpload = (file: NzUploadFile): boolean => {
+    const raw = file as unknown as File;
+    this.importFile = raw;
+    this.importFileList = [file];
+    return false;
+  };
+
+  downloadTemplate(): void {
+    this.download.download('system/user/importTemplate', {}, `user_template_${Date.now()}.xlsx`);
+  }
+
+  submitImport(): void {
+    if (!this.importFile) {
+      this.message.error('请选择要导入的文件');
+      return;
+    }
+    this.importSubmitting = true;
+    this.userApi.importData(this.importFile, this.updateSupport).subscribe({
+      next: (res) => {
+        this.importSubmitting = false;
+        if (res?.code === 200) {
+          this.message.success(res.msg || '导入成功');
+          this.importVisible = false;
+          this.getList();
+        } else {
+          this.message.error(res?.msg || '导入失败');
+        }
+      },
+      error: (err) => {
+        this.importSubmitting = false;
+        const msg = err?.error?.msg || err?.message || '导入失败';
+        this.message.error(msg);
+      },
+    });
   }
 
   goAuthRole(row: any): void {

@@ -42,6 +42,7 @@
       <button *hasPermi="['system:user:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
       <button *hasPermi="['system:user:edit']" nz-button nzType="default" [disabled]="checkedIds.size !== 1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
       <button *hasPermi="['system:user:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
+      <button *hasPermi="['system:user:import']" nz-button (click)="openImport()"><span nz-icon nzType="upload"></span>导入</button>
       <button *hasPermi="['system:user:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
     </div>
 
@@ -223,5 +224,20 @@
         </nz-form-control>
       </nz-form-item>
     </form>
+  </ng-container>
+</nz-modal>
+
+
+<nz-modal [(nzVisible)]="importVisible" nzTitle="用户导入" [nzOkLoading]="importSubmitting" (nzOnCancel)="importVisible=false" (nzOnOk)="submitImport()">
+  <ng-container *nzModalContent>
+    <nz-upload nzType="drag" [nzBeforeUpload]="beforeImportUpload" [nzFileList]="importFileList" nzAccept=".xls,.xlsx" [nzLimit]="1">
+      <p class="ant-upload-drag-icon"><span nz-icon nzType="inbox"></span></p>
+      <p class="ant-upload-text">将文件拖到此处，或点击上传</p>
+      <p class="ant-upload-hint">仅允许导入 xls、xlsx 格式文件。</p>
+    </nz-upload>
+    <label style="display:block;margin-top:12px">
+      <label nz-checkbox [(ngModel)]="updateSupport" name="updateSupport">是否更新已经存在的用户数据</label>
+    </label>
+    <a (click)="downloadTemplate()" style="display:inline-block;margin-top:8px">下载模板</a>
   </ng-container>
 </nz-modal>

@@ -72,4 +72,14 @@ export class UserApiService {
     form.append('avatarfile', file);
     return this.httpClient.post(Config.API_URL + 'system/user/profile/avatar', form, { observe: 'body' });
   }
+
+  /** 用户导入 */
+  importData(file: File, updateSupport = false): Observable<any> {
+    const form = new FormData();
+    form.append('file', file);
+    const qs = updateSupport ? '?updateSupport=1' : '?updateSupport=0';
+    return this.httpClient.post(Config.API_URL + 'system/user/importData' + qs, form, { observe: 'body' });
+  }
+
+  /** 下载导入模板（走 DownloadService POST importTemplate） */
 }
