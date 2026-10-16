@@ -27,6 +27,7 @@ import { ErrorMessage, FormConfig, GroupValidator, RulesKey } from './builder-fo
 import { CommonModule } from '@angular/common';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { confirmPasswordValidator, phoneValidator } from './builder-form.validators';
+import { RichEditor } from '../../shared/rich-editor/rich-editor';
 
 @Component({
   selector: 'app-builder-form',
@@ -42,6 +43,7 @@ import { confirmPasswordValidator, phoneValidator } from './builder-form.validat
     NzIconModule,
     NzGridModule,
     CommonModule,
+    RichEditor,
   ],
   templateUrl: './builder-form.html',
   styleUrl: './builder-form.less',

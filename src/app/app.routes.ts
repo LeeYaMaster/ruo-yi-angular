@@ -25,6 +25,7 @@ import { Online } from './dashboard/monitor/online/online';
 import { Server } from './dashboard/monitor/server/server';
 
 import { Gen } from './dashboard/tool/gen/gen';
+import { GenEdit } from './dashboard/tool/gen/gen-edit/gen-edit';
 import { Swagger } from './dashboard/tool/swagger/swagger';
 
 export const routes: Routes = [
@@ -73,6 +74,7 @@ export const routes: Routes = [
     component: Pages,
     children: [
       { path: 'gen', component: Gen },
+      { path: 'gen-edit/:tableId', component: GenEdit },
       { path: 'swagger', component: Swagger },
     ],
   },

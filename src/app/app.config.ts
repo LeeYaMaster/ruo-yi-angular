@@ -14,6 +14,7 @@ import { authInterceptor } from './http/auth.interceptor';
 import { responseInterceptor } from './http/response.interceptor';
 import { errorInterceptor } from './http/error.interceptor';
 import { SafeHtmlPipe } from './pipe/safe-html.pipe';
+import { provideQuillConfig } from 'ngx-quill/config';
 registerLocaleData(zh);
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +29,7 @@ export const appConfig: ApplicationConfig = {
     // 注意：拦截器的执行顺序是从左到右
     // authInterceptor -> responseInterceptor -> errorInterceptor
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, responseInterceptor, errorInterceptor])),
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    provideQuillConfig({}),
   ]
 };

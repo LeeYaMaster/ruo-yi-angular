@@ -29,6 +29,7 @@ import {
   DownOutline,
   DownloadOutline,
   UploadOutline,
+  QuestionCircleOutline,
 } from '@ant-design/icons-angular/icons';
 
 export const icons = [
@@ -62,4 +63,5 @@ export const icons = [
   DownOutline,
   DownloadOutline,
   UploadOutline,
+  QuestionCircleOutline,
 ];

@@ -1,0 +1,13 @@
+<div class="rich-editor" [style.minHeight.px]="minHeight">
+  <quill-editor
+    [ngModel]="value"
+    (ngModelChange)="onModelChange($event)"
+    format="html"
+    theme="snow"
+    [modules]="modules"
+    [placeholder]="placeholder"
+    [readOnly]="readOnly || disabled"
+    [styles]="{ minHeight: minHeight + 'px' }"
+    (onBlur)="onBlur()"
+  ></quill-editor>
+</div>

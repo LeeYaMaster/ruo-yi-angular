@@ -63,6 +63,9 @@
         @if (item.component === 'checkbox') {
           <label nz-checkbox [formControlName]="item.name">{{ item.placeholder || item.label }}</label>
         }
+        @if (item.component === 'editor') {
+          <app-rich-editor [formControlName]="item.name" [placeholder]="item.placeholder || '请输入内容'" [minHeight]="item.rows ? item.rows * 24 : 192"></app-rich-editor>
+        }
         @if (item.component === 'custom') {
           <div nz-row class="login-form-margin" style="align-items:center;">
             <div nz-col [nzSpan]="16">

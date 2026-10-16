@@ -33,6 +33,8 @@
     "@angular/ssr": "^20.3.10",
     "express": "^5.1.0",
     "ng-zorro-antd": "^20.4.1",
+    "ngx-quill": "^28.0.2",
+    "quill": "^2.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

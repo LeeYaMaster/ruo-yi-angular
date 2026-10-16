@@ -19,7 +19,7 @@ export type FormOption = { label: string; value: any };
 
 export type FormConfigItem = {
   name: string;
-  component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea' | 'password' | 'number' | 'custom';
+  component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea' | 'password' | 'number' | 'editor' | 'custom';
   customComponent?: Type<any>;
   label: string;
   placeholder?: string;

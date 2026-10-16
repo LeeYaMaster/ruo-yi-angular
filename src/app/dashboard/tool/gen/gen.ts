@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -34,6 +35,7 @@ export class Gen implements OnInit {
   private api = inject(GenApiService);
   private message = inject(NzMessageService);
   private modal = inject(NzModalService);
+  private router = inject(Router);
 
   loading = signal(false);
   list = signal<any[]>([]);
@@ -121,6 +123,15 @@ export class Gen implements OnInit {
     const c = this.list().filter((r) => this.checkedIds.has(r.tableId)).length;
     this.allChecked = n > 0 && c === n;
     this.indeterminate = c > 0 && c < n;
+  }
+
+  openEdit(row?: any): void {
+    const id = row?.tableId ?? [...this.checkedIds][0];
+    if (!id) {
+      this.message.warning('请选择要修改的数据');
+      return;
+    }
+    this.router.navigate(['/tool/gen-edit', id]);
   }
 
   openImport(): void {

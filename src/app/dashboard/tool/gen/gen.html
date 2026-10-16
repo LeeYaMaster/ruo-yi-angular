@@ -10,6 +10,7 @@
   <div class="toolbar">
     <button *hasPermi="['tool:gen:code']" nz-button nzType="primary" [disabled]="!checkedNames.size" (click)="generate()"><span nz-icon nzType="download"></span>生成</button>
     <button *hasPermi="['tool:gen:import']" nz-button (click)="openImport()"><span nz-icon nzType="upload"></span>导入</button>
+    <button *hasPermi="['tool:gen:edit']" nz-button [disabled]="checkedIds.size!==1" (click)="openEdit()"><span nz-icon nzType="edit"></span>修改</button>
     <button *hasPermi="['tool:gen:remove']" nz-button nzDanger [disabled]="!checkedIds.size" (click)="remove()"><span nz-icon nzType="delete"></span>删除</button>
   </div>
   <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
@@ -30,6 +31,7 @@
           <td>{{ parseTime(row.updateTime) }}</td>
           <td>
             <a *hasPermi="['tool:gen:preview']" (click)="preview(row)">预览</a><span class="sep">|</span>
+            <a *hasPermi="['tool:gen:edit']" (click)="openEdit(row)">编辑</a><span class="sep">|</span>
             <a *hasPermi="['tool:gen:code']" (click)="generate(row)">生成</a><span class="sep">|</span>
             <a *hasPermi="['tool:gen:edit']" (click)="synch(row)">同步</a><span class="sep">|</span>
             <a *hasPermi="['tool:gen:remove']" (click)="remove(row)">删除</a>
