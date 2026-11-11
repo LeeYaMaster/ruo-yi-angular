@@ -68,109 +68,34 @@
   [(nzVisible)]="modalVisible"
   [nzTitle]="modalTitle"
   [nzWidth]="680"
-  [nzOkLoading]="submitting"
+  [nzFooter]="modalFooter"
   (nzOnCancel)="modalVisible = false"
-  (nzOnOk)="submit()"
 >
   <ng-container *nzModalContent>
-    <form nz-form >
-      <nz-form-item>
-        <nz-form-label nzRequired>角色名称</nz-form-label>
-        <nz-form-control><input nz-input [(ngModel)]="form.roleName" name="roleName" /></nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label nzRequired>权限字符</nz-form-label>
-        <nz-form-control><input nz-input [(ngModel)]="form.roleKey" name="roleKey" /></nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label nzRequired>角色顺序</nz-form-label>
-        <nz-form-control>
-          <nz-input-number [(ngModel)]="form.roleSort" name="roleSort" [nzMin]="0" style="width: 100%"></nz-input-number>
-        </nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label>状态</nz-form-label>
-        <nz-form-control>
-          <nz-radio-group [(ngModel)]="form.status" name="status">
-            @for (d of statusOptions; track d.value) {
-              <label nz-radio [nzValue]="d.value">{{ d.label }}</label>
-            }
-          </nz-radio-group>
-        </nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label>菜单权限</nz-form-label>
-        <nz-form-control>
-          <label nz-checkbox [(ngModel)]="menuExpandAll" name="menuExpandAll">展开/折叠</label>
-          <label nz-checkbox [(ngModel)]="menuCheckStrictly" name="menuCheckStrictly" class="ml8">父子联动</label>
-          <div class="menu-tree">
-            <nz-tree
-              [nzData]="menuNodes"
-              nzCheckable
-              [(nzCheckedKeys)]="checkedMenuKeys"
-              [nzExpandAll]="menuExpandAll"
-              [nzCheckStrictly]="!menuCheckStrictly"
-            ></nz-tree>
-          </div>
-        </nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label>备注</nz-form-label>
-        <nz-form-control>
-          <textarea nz-input [(ngModel)]="form.remark" name="remark" rows="3"></textarea>
-        </nz-form-control>
-      </nz-form-item>
-    </form>
+    @if (modalVisible) {
+      <app-builder-form #bf layout="vertical" [showSubmit]="false" [formConfig]="formConfig"></app-builder-form>
+    }
   </ng-container>
 </nz-modal>
-
+<ng-template #modalFooter>
+  <button nz-button (click)="modalVisible = false">取 消</button>
+  <button nz-button nzType="primary" [nzLoading]="submitting" (click)="save()">确 定</button>
+</ng-template>
 
 <nz-modal
   [(nzVisible)]="dataScopeVisible"
   nzTitle="分配数据权限"
   [nzWidth]="500"
-  [nzOkLoading]="dataScopeSubmitting"
+  [nzFooter]="dataScopeFooter"
   (nzOnCancel)="dataScopeVisible = false"
-  (nzOnOk)="submitDataScope()"
 >
   <ng-container *nzModalContent>
-    <form nz-form>
-      <nz-form-item>
-        <nz-form-label>角色名称</nz-form-label>
-        <nz-form-control><input nz-input [(ngModel)]="dataScopeForm.roleName" name="dsRoleName" disabled /></nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label>权限字符</nz-form-label>
-        <nz-form-control><input nz-input [(ngModel)]="dataScopeForm.roleKey" name="dsRoleKey" disabled /></nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label>权限范围</nz-form-label>
-        <nz-form-control>
-          <nz-select [(ngModel)]="dataScopeForm.dataScope" name="dataScope" style="width:100%" (ngModelChange)="onDataScopeChange($event)">
-            @for (d of dataScopeOptions; track d.value) {
-              <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
-            }
-          </nz-select>
-        </nz-form-control>
-      </nz-form-item>
-      @if (dataScopeForm.dataScope === '2') {
-        <nz-form-item>
-          <nz-form-label>数据权限</nz-form-label>
-          <nz-form-control>
-            <label nz-checkbox [(ngModel)]="deptExpandAll" name="deptExpandAll">展开/折叠</label>
-            <label nz-checkbox [(ngModel)]="deptCheckStrictly" name="deptCheckStrictly" class="ml8">父子联动</label>
-            <div class="menu-tree">
-              <nz-tree
-                [nzData]="deptNodes"
-                nzCheckable
-                [(nzCheckedKeys)]="checkedDeptKeys"
-                [nzExpandAll]="deptExpandAll"
-                [nzCheckStrictly]="!deptCheckStrictly"
-              ></nz-tree>
-            </div>
-          </nz-form-control>
-        </nz-form-item>
-      }
-    </form>
+    @if (dataScopeVisible) {
+      <app-builder-form #dsf layout="vertical" [showSubmit]="false" [formConfig]="dataScopeFormConfig"></app-builder-form>
+    }
   </ng-container>
 </nz-modal>
+<ng-template #dataScopeFooter>
+  <button nz-button (click)="dataScopeVisible = false">取 消</button>
+  <button nz-button nzType="primary" [nzLoading]="dataScopeSubmitting" (click)="submitDataScope()">确 定</button>
+</ng-template>

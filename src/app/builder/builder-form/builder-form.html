@@ -85,6 +85,27 @@
             nzAllowClear
           ></nz-tree-select>
         }
+        @if (item.component === 'tree-check') {
+          <div class="tree-check">
+            @if (item.treeToolbar !== false) {
+              <div class="tree-check-toolbar">
+                <label nz-checkbox [nzChecked]="treeUiOf(item.name).expandAll" (nzCheckedChange)="setTreeExpandAll(item.name, $event)">展开/折叠</label>
+                <label nz-checkbox [nzChecked]="treeUiOf(item.name).nodeAll" (nzCheckedChange)="setTreeNodeAll(item.name, $event)">全选/全不选</label>
+                <label nz-checkbox [nzChecked]="treeUiOf(item.name).linkage" (nzCheckedChange)="setTreeLinkage(item.name, $event)">父子联动</label>
+              </div>
+            }
+            <div class="tree-check-wrap">
+              <nz-tree
+                [nzData]="item.treeData || []"
+                nzCheckable
+                [nzCheckedKeys]="asTreeKeys(validateForm.get(item.name)?.value)"
+                (nzCheckedKeysChange)="onTreeCheckedKeys(item.name, $event)"
+                [nzExpandAll]="treeUiOf(item.name).expandAll"
+                [nzCheckStrictly]="!treeUiOf(item.name).linkage"
+              ></nz-tree>
+            </div>
+          </div>
+        }
         @if (item.component === 'editor') {
           <app-rich-editor [formControlName]="item.name" [placeholder]="item.placeholder || '请输入内容'" [minHeight]="item.rows ? item.rows * 24 : 192"></app-rich-editor>
         }

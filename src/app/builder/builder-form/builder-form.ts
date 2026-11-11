@@ -4,7 +4,9 @@ import {
   Input,
   OnChanges,
   Output,
+  QueryList,
   SimpleChanges,
+  ViewChildren,
   inject,
 } from '@angular/core';
 import {
@@ -24,11 +26,14 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzTreeSelectModule } from 'ng-zorro-antd/tree-select';
-import { ErrorMessage, FormConfig, GroupValidator, RulesKey } from './builder-form.model';
+import { NzTreeComponent, NzTreeModule, NzTreeNode } from 'ng-zorro-antd/tree';
+import { ErrorMessage, FormConfig, FormConfigItem, GroupValidator, RulesKey } from './builder-form.model';
 import { CommonModule } from '@angular/common';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { confirmPasswordValidator, phoneValidator } from './builder-form.validators';
 import { RichEditor } from '../../shared/rich-editor/rich-editor';
+
+type TreeUiState = { expandAll: boolean; nodeAll: boolean; linkage: boolean };
 
 @Component({
   selector: 'app-builder-form',
@@ -44,6 +49,7 @@ import { RichEditor } from '../../shared/rich-editor/rich-editor';
     NzIconModule,
     NzGridModule,
     NzTreeSelectModule,
+    NzTreeModule,
     CommonModule,
     RichEditor,
   ],
@@ -61,10 +67,13 @@ export class BuilderForm implements OnChanges {
   @Input() controlSpan = 16;
   @Output() submitFormEvent = new EventEmitter<any>();
 
+  @ViewChildren(NzTreeComponent) private treeComps?: QueryList<NzTreeComponent>;
+
   private fb = inject(NonNullableFormBuilder);
   private notification = inject(NzNotificationService);
   validateForm = this.fb.group({});
   private built = false;
+  treeUi: Record<string, TreeUiState> = {};
 
   getControlErrorsMessage(control: AbstractControl, errorMessage: ErrorMessage = {}): string[] {
     return Object.keys(control.errors ?? {}).map((key) => errorMessage?.[key as RulesKey] ?? '');
@@ -88,13 +97,11 @@ export class BuilderForm implements OnChanges {
     if (!this.built && this.formConfig?.length) {
       this.buildForm();
     }
-    this.validateForm.valueChanges.subscribe((formValue) => {
-      this.clearAllHideControls(formValue);
-    });
   }
 
   private buildForm(): void {
     const next = this.fb.group({});
+    this.treeUi = {};
     this.formConfig.forEach((item) => {
       const validators =
         Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) ||
@@ -104,6 +111,13 @@ export class BuilderForm implements OnChanges {
         validators.flat()
       );
       next.addControl(item.name, ctrl);
+      if (item.component === 'tree-check') {
+        this.treeUi[item.name] = {
+          expandAll: item.treeExpandAll !== false,
+          nodeAll: false,
+          linkage: item.treeLinkage !== false,
+        };
+      }
     });
     this.groupValidators?.forEach((g) => {
       if (g.validator === 'confirmPassword') {
@@ -113,6 +127,9 @@ export class BuilderForm implements OnChanges {
     this.validateForm = next;
     this.built = true;
     this.clearAllHideControls(this.validateForm.value);
+    this.validateForm.valueChanges.subscribe((formValue) => {
+      this.clearAllHideControls(formValue);
+    });
   }
 
   clearAllHideControls(formValue: any): void {
@@ -128,8 +145,14 @@ export class BuilderForm implements OnChanges {
       } else {
         control.clearValidators();
         control.setErrors(null);
+        if (item.component === 'tree-check') {
+          const current = control.value;
+          if (Array.isArray(current) && current.length) {
+            control.setValue([], { emitEvent: false });
+          }
+        }
       }
-      control.updateValueAndValidity({ onlySelf: true });
+      control.updateValueAndValidity({ onlySelf: true, emitEvent: false });
     });
   }
 
@@ -164,9 +187,8 @@ export class BuilderForm implements OnChanges {
 
   private defaultFor(component: string): any {
     if (component === 'number') return 0;
-    if (component === 'checkbox-group' || (component === 'select')) {
-      return component === 'checkbox-group' ? [] : '';
-    }
+    if (component === 'checkbox-group' || component === 'tree-check') return [];
+    if (component === 'select') return '';
     return '';
   }
 
@@ -186,6 +208,80 @@ export class BuilderForm implements OnChanges {
     ctrl.markAsDirty();
   }
 
+  treeUiOf(name: string): TreeUiState {
+    if (!this.treeUi[name]) {
+      this.treeUi[name] = { expandAll: true, nodeAll: false, linkage: true };
+    }
+    return this.treeUi[name];
+  }
+
+  private treeByName(name: string): NzTreeComponent | undefined {
+    const names = this.formConfig.filter((i) => i.component === 'tree-check').map((i) => i.name);
+    const idx = names.indexOf(name);
+    return idx >= 0 ? this.treeComps?.get(idx) : undefined;
+  }
+
+  asTreeKeys(value: any): (string | number)[] {
+    return Array.isArray(value) ? value : [];
+  }
+
+  onTreeCheckedKeys(name: string, keys: (string | number)[]): void {
+    const ctrl = this.validateForm.get(name);
+    if (!ctrl) return;
+    ctrl.setValue(keys ?? []);
+    ctrl.markAsDirty();
+    const all = this.flattenTreeKeys(this.formConfig.find((i) => i.name === name)?.treeData || []);
+    this.treeUiOf(name).nodeAll = all.length > 0 && all.every((k) =>
+      (keys || []).some((ck) => String(ck) === String(k))
+    );
+  }
+
+  setTreeExpandAll(name: string, expand: boolean): void {
+    this.treeUiOf(name).expandAll = expand;
+    const walk = (nodes: NzTreeNode[]) => {
+      (nodes || []).forEach((n) => {
+        n.isExpanded = expand;
+        if (n.children?.length) walk(n.children);
+      });
+    };
+    const tree = this.treeByName(name);
+    if (tree) walk(tree.getTreeNodes());
+  }
+
+  setTreeNodeAll(name: string, checked: boolean): void {
+    this.treeUiOf(name).nodeAll = checked;
+    const item = this.formConfig.find((i) => i.name === name);
+    const keys = checked ? this.flattenTreeKeys(item?.treeData || []) : [];
+    this.onTreeCheckedKeys(name, keys);
+  }
+
+  setTreeLinkage(name: string, linkage: boolean): void {
+    this.treeUiOf(name).linkage = linkage;
+  }
+
+  private flattenTreeKeys(nodes: any[]): (string | number)[] {
+    const out: (string | number)[] = [];
+    (nodes || []).forEach((n) => {
+      if (n?.key !== undefined && n?.key !== null) out.push(n.key);
+      if (n?.children?.length) out.push(...this.flattenTreeKeys(n.children));
+    });
+    return out;
+  }
+
+  /** checked + half-checked keys, matching RuoYi getMenuAllCheckedKeys / getDeptAllCheckedKeys */
+  collectTreeKeys(name: string): number[] {
+    const tree = this.treeByName(name);
+    const fromTree = (list: NzTreeNode[] | undefined) =>
+      (list || []).map((n) => n.key).filter((k) => k !== undefined && k !== null);
+    const checked = tree
+      ? fromTree(tree.getCheckedNodeList())
+      : this.asTreeKeys(this.validateForm.get(name)?.value);
+    const half = tree ? fromTree(tree.getHalfCheckedNodeList()) : [];
+    const merged = [...half, ...checked];
+    const nums = merged.map((k) => Number(k)).filter((n) => !Number.isNaN(n));
+    return [...new Set(nums)];
+  }
+
   /** Patch values after open edit modal */
   patchValue(value: Record<string, any>): void {
     this.validateForm.patchValue(value ?? {});
@@ -199,14 +295,28 @@ export class BuilderForm implements OnChanges {
     return this.validateForm.getRawValue();
   }
 
+  /** Raw values plus tree-check keys (含半选) and linkage fields */
+  getSubmitValue(): any {
+    const raw = this.validateForm.getRawValue() as Record<string, any>;
+    const result: Record<string, any> = {};
+    this.formConfig.forEach((item: FormConfigItem) => {
+      const show = !item.when || item.when(this.validateForm.value);
+      if (item.component === 'tree-check') {
+        result[item.name] = show ? this.collectTreeKeys(item.name) : [];
+        if (item.treeLinkageName) {
+          result[item.treeLinkageName] = this.treeUiOf(item.name).linkage;
+        }
+        return;
+      }
+      if (!show) return;
+      result[item.name] = raw[item.name];
+    });
+    return result;
+  }
+
   submitForm(): void {
     if (this.validateForm.valid) {
-      const filteredValue = Object.fromEntries(
-        this.formConfig
-          .filter((item) => !item.when || item.when(this.validateForm.value))
-          .map((item) => [item.name, (this.validateForm.getRawValue() as any)[item.name]])
-      );
-      this.submitFormEvent.emit(filteredValue);
+      this.submitFormEvent.emit(this.getSubmitValue());
     } else {
       Object.entries(this.validateForm.controls).forEach(([key, control]: [string, any]) => {
         if (control.invalid) {

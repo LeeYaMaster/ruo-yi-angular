@@ -7,13 +7,8 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzRadioModule } from 'ng-zorro-antd/radio';
-import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
-import { NzTreeModule } from 'ng-zorro-antd/tree';
-import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { RoleApiService } from '../../../api/system/role.api.service';
 import { MenuApiService } from '../../../api/system/menu.api.service';
 import { DictService, DictOption } from '../../../api/dict.service';
@@ -23,6 +18,8 @@ import { Router } from '@angular/router';
 import { DownloadService } from '../../../http/download.service';
 import { BuilderTable } from '../../../builder/builder-table/builder-table';
 import { BuilderTableColumn } from '../../../builder/builder-table/builder-table.model';
+import { BuilderForm } from '../../../builder/builder-form/builder-form';
+import { FormConfig } from '../../../builder/builder-form/builder-form.model';
 
 @Component({
   selector: 'app-role',
@@ -35,20 +32,18 @@ import { BuilderTableColumn } from '../../../builder/builder-table/builder-table
     NzSelectModule,
     NzFormModule,
     NzModalModule,
-    NzSwitchModule,
     NzIconModule,
-    NzRadioModule,
-    NzInputNumberModule,
-    NzTreeModule,
-    NzCheckboxModule,
     HasPermiDirective,
     BuilderTable,
+    BuilderForm,
   ],
   templateUrl: './role.html',
   styleUrl: './role.less',
 })
 export class Role implements OnInit {
   @ViewChild('bt') bt?: BuilderTable;
+  @ViewChild('bf') bf?: BuilderForm;
+  @ViewChild('dsf') dsf?: BuilderForm;
   private roleApi = inject(RoleApiService);
   private menuApi = inject(MenuApiService);
   private dictService = inject(DictService);
@@ -76,16 +71,13 @@ export class Role implements OnInit {
   modalVisible = false;
   modalTitle = '新增角色';
   submitting = false;
-  form: any = this.emptyForm();
-
-  menuNodes: any[] = [];
-  checkedMenuKeys: (string | number)[] = [];
-  menuExpandAll = true;
-  menuCheckStrictly = true;
+  editingId?: number;
+  formConfig: FormConfig = [];
 
   dataScopeVisible = false;
   dataScopeSubmitting = false;
-  dataScopeForm: any = { roleId: undefined, roleName: '', roleKey: '', dataScope: '1', deptIds: [] as number[], deptCheckStrictly: true };
+  dataScopeRoleId?: number;
+  dataScopeFormConfig: FormConfig = [];
   dataScopeOptions = [
     { value: '1', label: '全部数据权限' },
     { value: '2', label: '自定数据权限' },
@@ -93,29 +85,12 @@ export class Role implements OnInit {
     { value: '4', label: '本部门及以下数据权限' },
     { value: '5', label: '仅本人数据权限' },
   ];
-  deptNodes: any[] = [];
-  checkedDeptKeys: (string | number)[] = [];
-  deptExpandAll = true;
-  deptCheckStrictly = true;
 
   parseTime = parseTime;
 
   ngOnInit(): void {
     this.dictService.getDict('sys_normal_disable').subscribe((d) => (this.statusOptions = d));
     this.getList();
-  }
-
-  emptyForm() {
-    return {
-      roleId: undefined as number | undefined,
-      roleName: '',
-      roleKey: '',
-      roleSort: 0,
-      status: '0',
-      menuIds: [] as number[],
-      remark: '',
-      menuCheckStrictly: true,
-    };
   }
 
   getList(): void {
@@ -156,22 +131,147 @@ export class Role implements OnInit {
 
   onSelection(ids: Set<any>) { this.checkedIds = ids as Set<number>; }
 
+  private toTreeNodes(nodes: any[], titleKeys: string[], idKeys: string[]): any[] {
+    return (nodes || []).map((n) => {
+      const title = titleKeys.map((k) => n[k]).find((v) => v !== undefined && v !== null) ?? '';
+      const key = idKeys.map((k) => n[k]).find((v) => v !== undefined && v !== null);
+      return {
+        title,
+        key,
+        children: n.children ? this.toTreeNodes(n.children, titleKeys, idKeys) : undefined,
+        isLeaf: !(n.children && n.children.length),
+      };
+    });
+  }
+
   toMenuNodes(nodes: any[]): any[] {
-    return (nodes || []).map((n) => ({
-      title: n.label ?? n.menuName,
-      key: n.id ?? n.menuId,
-      children: n.children ? this.toMenuNodes(n.children) : undefined,
-      isLeaf: !(n.children && n.children.length),
-    }));
+    return this.toTreeNodes(nodes, ['label', 'menuName'], ['id', 'menuId']);
+  }
+
+  toDeptNodes(nodes: any[]): any[] {
+    return this.toTreeNodes(nodes, ['label', 'deptName'], ['id', 'deptId']);
+  }
+
+  private buildRoleFormConfig(data: {
+    roleName?: string;
+    roleKey?: string;
+    roleSort?: number;
+    status?: string;
+    remark?: string;
+    menuCheckStrictly?: boolean;
+    menuNodes?: any[];
+    menuIds?: (string | number)[];
+  }): FormConfig {
+    return [
+      {
+        name: 'roleName',
+        component: 'input',
+        label: '角色名称',
+        placeholder: '请输入角色名称',
+        rules: { required: true },
+        errorMessage: { required: '角色名称不能为空' },
+        defaultValue: data.roleName ?? '',
+      },
+      {
+        name: 'roleKey',
+        component: 'input',
+        label: '权限字符',
+        placeholder: '请输入权限字符',
+        rules: { required: true },
+        errorMessage: { required: '权限字符不能为空' },
+        defaultValue: data.roleKey ?? '',
+      },
+      {
+        name: 'roleSort',
+        component: 'number',
+        label: '角色顺序',
+        rules: { required: true },
+        errorMessage: { required: '角色顺序不能为空' },
+        defaultValue: data.roleSort ?? 0,
+        min: 0,
+      },
+      {
+        name: 'status',
+        component: 'radio',
+        label: '状态',
+        defaultValue: data.status ?? '0',
+        options: this.statusOptions.map((d) => ({ label: d.label, value: d.value })),
+      },
+      {
+        name: 'menuIds',
+        component: 'tree-check',
+        label: '菜单权限',
+        treeData: data.menuNodes ?? [],
+        defaultValue: data.menuIds ?? [],
+        treeLinkage: data.menuCheckStrictly !== false,
+        treeLinkageName: 'menuCheckStrictly',
+        treeExpandAll: true,
+      },
+      {
+        name: 'remark',
+        component: 'textarea',
+        label: '备注',
+        placeholder: '请输入内容',
+        defaultValue: data.remark ?? '',
+        rows: 3,
+      },
+    ];
+  }
+
+  private buildDataScopeFormConfig(data: {
+    roleName?: string;
+    roleKey?: string;
+    dataScope?: string;
+    deptCheckStrictly?: boolean;
+    deptNodes?: any[];
+    deptIds?: (string | number)[];
+  }): FormConfig {
+    return [
+      {
+        name: 'roleName',
+        component: 'input',
+        label: '角色名称',
+        defaultValue: data.roleName ?? '',
+        disabled: true,
+      },
+      {
+        name: 'roleKey',
+        component: 'input',
+        label: '权限字符',
+        defaultValue: data.roleKey ?? '',
+        disabled: true,
+      },
+      {
+        name: 'dataScope',
+        component: 'select',
+        label: '权限范围',
+        defaultValue: String(data.dataScope ?? '1'),
+        options: this.dataScopeOptions,
+      },
+      {
+        name: 'deptIds',
+        component: 'tree-check',
+        label: '数据权限',
+        treeData: data.deptNodes ?? [],
+        defaultValue: data.deptIds ?? [],
+        treeLinkage: data.deptCheckStrictly !== false,
+        treeLinkageName: 'deptCheckStrictly',
+        treeExpandAll: true,
+        when: (form) => String(form?.dataScope) === '2',
+      },
+    ];
   }
 
   openAdd(): void {
-    this.form = this.emptyForm();
+    this.editingId = undefined;
     this.modalTitle = '新增角色';
-    this.checkedMenuKeys = [];
     this.menuApi.treeselect().subscribe({
       next: (res) => {
-        this.menuNodes = this.toMenuNodes(res?.data ?? []);
+        this.formConfig = this.buildRoleFormConfig({
+          menuNodes: this.toMenuNodes(res?.data ?? []),
+          menuIds: [],
+          menuCheckStrictly: true,
+        });
         this.modalVisible = true;
       },
     });
@@ -184,22 +284,20 @@ export class Role implements OnInit {
     this.roleApi.get(roleId).subscribe({
       next: (res) => {
         const r = res?.data ?? res;
-        this.form = {
-          roleId: r.roleId,
-          roleName: r.roleName,
-          roleKey: r.roleKey,
-          roleSort: r.roleSort ?? 0,
-          status: r.status ?? '0',
-          menuIds: [],
-          remark: r.remark ?? '',
-          menuCheckStrictly: r.menuCheckStrictly !== false,
-        };
-        this.menuCheckStrictly = this.form.menuCheckStrictly;
+        this.editingId = r.roleId;
         this.menuApi.roleMenuTreeselect(roleId).subscribe({
           next: (menuRes) => {
             const data = menuRes?.data ?? {};
-            this.menuNodes = this.toMenuNodes(data.menus ?? data);
-            this.checkedMenuKeys = (data.checkedKeys ?? []).map((k: any) => k);
+            this.formConfig = this.buildRoleFormConfig({
+              roleName: r.roleName,
+              roleKey: r.roleKey,
+              roleSort: r.roleSort ?? 0,
+              status: r.status ?? '0',
+              remark: r.remark ?? '',
+              menuCheckStrictly: r.menuCheckStrictly !== false,
+              menuNodes: this.toMenuNodes(data.menus ?? data),
+              menuIds: (data.checkedKeys ?? []).map((k: any) => k),
+            });
             this.modalVisible = true;
           },
         });
@@ -207,22 +305,22 @@ export class Role implements OnInit {
     });
   }
 
-  collectChecked(keys: (string | number)[]): number[] {
-    return (keys || []).map((k) => Number(k)).filter((n) => !Number.isNaN(n));
-  }
-
-  submit(): void {
-    if (!this.form.roleName || !this.form.roleKey) {
-      this.message.warning('角色名称和权限字符不能为空');
+  save(): void {
+    const bf = this.bf;
+    if (!bf) return;
+    if (bf.validateForm.invalid) {
+      bf.submitForm();
       return;
     }
+    const value = bf.getSubmitValue();
     this.submitting = true;
     const payload = {
-      ...this.form,
-      menuIds: this.collectChecked(this.checkedMenuKeys),
-      menuCheckStrictly: this.menuCheckStrictly,
+      ...value,
+      roleId: this.editingId,
+      menuIds: value.menuIds ?? [],
+      menuCheckStrictly: value.menuCheckStrictly !== false,
     };
-    const req$ = this.form.roleId ? this.roleApi.update(payload) : this.roleApi.add(payload);
+    const req$ = this.editingId ? this.roleApi.update(payload) : this.roleApi.add(payload);
     req$.subscribe({
       next: () => {
         this.message.success('操作成功');
@@ -274,48 +372,41 @@ export class Role implements OnInit {
     });
   }
 
-  toDeptNodes(nodes: any[]): any[] {
-    return (nodes || []).map((n) => ({
-      title: n.label ?? n.deptName,
-      key: n.id ?? n.deptId,
-      children: n.children ? this.toDeptNodes(n.children) : undefined,
-      isLeaf: !(n.children && n.children.length),
-    }));
-  }
-
   openDataScope(row: any): void {
-    this.dataScopeForm = {
-      roleId: row.roleId,
-      roleName: row.roleName,
-      roleKey: row.roleKey,
-      dataScope: String(row.dataScope ?? '1'),
-      deptIds: [],
-      deptCheckStrictly: row.deptCheckStrictly !== false,
-    };
-    this.deptCheckStrictly = this.dataScopeForm.deptCheckStrictly;
-    this.checkedDeptKeys = [];
+    this.dataScopeRoleId = row.roleId;
     this.roleApi.deptTree(row.roleId).subscribe({
       next: (res) => {
         const data = res?.data ?? {};
-        this.deptNodes = this.toDeptNodes(data.depts ?? data);
-        this.checkedDeptKeys = (data.checkedKeys ?? []).map((k: any) => k);
+        this.dataScopeFormConfig = this.buildDataScopeFormConfig({
+          roleName: row.roleName,
+          roleKey: row.roleKey,
+          dataScope: String(row.dataScope ?? '1'),
+          deptCheckStrictly: row.deptCheckStrictly !== false,
+          deptNodes: this.toDeptNodes(data.depts ?? data),
+          deptIds: (data.checkedKeys ?? []).map((k: any) => k),
+        });
         this.dataScopeVisible = true;
       },
     });
   }
 
-  onDataScopeChange(value: string): void {
-    if (value !== '2') {
-      this.checkedDeptKeys = [];
-    }
-  }
-
   submitDataScope(): void {
+    const dsf = this.dsf;
+    if (!dsf) return;
+    if (dsf.validateForm.invalid) {
+      dsf.submitForm();
+      return;
+    }
+    const value = dsf.getSubmitValue();
     this.dataScopeSubmitting = true;
+    const dataScope = String(value.dataScope ?? '1');
     const payload = {
-      ...this.dataScopeForm,
-      deptIds: this.collectChecked(this.checkedDeptKeys),
-      deptCheckStrictly: this.deptCheckStrictly,
+      roleId: this.dataScopeRoleId,
+      roleName: value.roleName,
+      roleKey: value.roleKey,
+      dataScope,
+      deptIds: dataScope === '2' ? (value.deptIds ?? []) : [],
+      deptCheckStrictly: value.deptCheckStrictly !== false,
     };
     this.roleApi.dataScope(payload).subscribe({
       next: () => {
