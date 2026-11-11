@@ -53,12 +53,12 @@ export class Login {
       name: 'userName',
       component: 'input',
       label: 'Username',
-      placeholder: 'Enter your username',
+      placeholder: '请输入用户名',
       rules: {
         required: true,
       },
       errorMessage: {
-        required: 'Please input your username',
+        required: '请输入用户名',
       },
       defaultValue: '',
     },
@@ -66,12 +66,12 @@ export class Login {
       name: 'password',
       component: 'password',
       label: 'Password',
-      placeholder: 'Enter your password',
+      placeholder: '请输入密码',
       rules: {
         required: true,
       },
       errorMessage: {
-        required: 'Please input your password',
+        required: '请输入密码',
       },
     },
     {
@@ -79,12 +79,12 @@ export class Login {
       component: 'custom',
       customComponent: Captcha,
       label: 'Captcha',
-      placeholder: 'Enter your captcha',
+      placeholder: '请输入验证码',
       rules: {
         required: true,
       },
       errorMessage: {
-        required: 'Please input your captcha',
+        required: '请输入验证码',
       },
     }
   ];

@@ -1,4 +1,21 @@
-.gpu-svg {
-  will-change: transform; // ← 强制 GPU 加速
-  transform: translateZ(0); // ← GPU 层
+.captcha-wrap {
+  width: 100px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.captcha-wrap img {
+  height: 40px;
+  width: 100px;
+  display: block;
+}
+
+.captcha-placeholder {
+  font-size: 12px;
+  color: #1677ff;
+  white-space: nowrap;
 }

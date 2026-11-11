@@ -1,13 +1,11 @@
-import { ChangeDetectorRef, Component, ElementRef, inject, PLATFORM_ID, ViewChild } from '@angular/core';
-import { CaptchaApiService } from './captcha.api.service';
-import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { fromEvent, throttleTime } from 'rxjs';
-import { CaptchaService } from './captcha.service';
+import { ChangeDetectorRef, Component, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { CaptchaApiService } from './captcha.api.service';
+import { CaptchaService } from './captcha.service';
 
 @Component({
   selector: 'app-captcha',
-  imports: [SafeHtmlPipe],
+  imports: [],
   templateUrl: './captcha.html',
   styleUrl: './captcha.less',
 })
@@ -15,40 +13,49 @@ export class Captcha {
   private captchaApiService = inject(CaptchaApiService);
   private captchaService = inject(CaptchaService);
   private platformId = inject(PLATFORM_ID);
-  @ViewChild('captchaRef') captchaRef!: ElementRef;
-  captchaUrl: string = '';
-  uuid: string = ''
   private cdr = inject(ChangeDetectorRef);
+
+  captchaUrl = '';
+
   ngOnInit(): void {
-    console.log('Captcha ngOnInit');
-    // 只在浏览器端调用 API，避免 SSR 环境下的 URL 解析错误
     if (isPlatformBrowser(this.platformId)) {
       this.getCaptchaUrl();
     }
   }
 
-  ngAfterViewInit(): void {
-    // 只在浏览器端绑定事件监听器，避免 SSR 环境下的错误
-    if (isPlatformBrowser(this.platformId) && this.captchaRef?.nativeElement) {
-      fromEvent(this.captchaRef.nativeElement, 'click')
-        .pipe(
-          throttleTime(1000))
-        .subscribe(() => {
-          this.getCaptchaUrl();
-        });
-    }
-  }
-
   getCaptchaUrl(): void {
-    this.captchaApiService.getCode().subscribe((res) => {
-      // console.log(res);
-      this.captchaUrl = res.data.img;
-      this.captchaService.setUuid(res.data.uuid);
-      this.cdr.detectChanges();
+    this.captchaApiService.getCode().subscribe({
+      next: (res) => {
+        const payload = res?.data ?? res;
+        const img = payload?.img ?? '';
+        const uuid = payload?.uuid ?? '';
+        this.captchaService.setUuid(uuid);
+        this.captchaUrl = this.toImageSrc(img);
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.captchaUrl = '';
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      },
     });
   }
 
   refreshCaptcha(): void {
     this.getCaptchaUrl();
+  }
+
+  private toImageSrc(img: string): string {
+    if (!img) {
+      return '';
+    }
+    if (img.startsWith('data:') || img.startsWith('blob:') || img.startsWith('http')) {
+      return img;
+    }
+    if (img.includes('<svg')) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(img);
+    }
+    return 'data:image/png;base64,' + img;
   }
 }

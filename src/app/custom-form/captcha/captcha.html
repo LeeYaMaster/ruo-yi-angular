@@ -1,7 +1,7 @@
-<div style="width: 100%;">
-  <!-- <img [src]="captchaUrl" style="height:32px;cursor:pointer;" 
-  (click)="refreshCaptcha()"/> -->
-  <div [innerHTML]="captchaUrl | safeHtml" #captchaRef></div>
-  <!-- <img [src]="captchaUrl" style="height:32px;cursor:pointer;" 
-  (click)="refreshCaptcha()"/> -->
+<div class="captcha-wrap" #captchaRef>
+  @if (captchaUrl) {
+    <img [src]="captchaUrl" alt="验证码" (click)="refreshCaptcha()" />
+  } @else {
+    <span class="captcha-placeholder" (click)="refreshCaptcha()">点击刷新</span>
+  }
 </div>
