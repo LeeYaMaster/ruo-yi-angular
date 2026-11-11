@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -21,6 +21,8 @@ import { parsePage, parseTime } from '../../../util/ruoyi.util';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
 import { Router } from '@angular/router';
 import { DownloadService } from '../../../http/download.service';
+import { BuilderTable } from '../../../builder/builder-table/builder-table';
+import { BuilderTableColumn } from '../../../builder/builder-table/builder-table.model';
 
 @Component({
   selector: 'app-role',
@@ -40,11 +42,13 @@ import { DownloadService } from '../../../http/download.service';
     NzTreeModule,
     NzCheckboxModule,
     HasPermiDirective,
+    BuilderTable,
   ],
   templateUrl: './role.html',
   styleUrl: './role.less',
 })
 export class Role implements OnInit {
+  @ViewChild('bt') bt?: BuilderTable;
   private roleApi = inject(RoleApiService);
   private menuApi = inject(MenuApiService);
   private dictService = inject(DictService);
@@ -60,8 +64,14 @@ export class Role implements OnInit {
 
   query = { pageNum: 1, pageSize: 10, roleName: '', roleKey: '', status: undefined as string | undefined };
   checkedIds = new Set<number>();
-  allChecked = false;
-  indeterminate = false;
+  columns: BuilderTableColumn[] = [
+    { key: 'roleId', title: '角色编号', width: '90px' },
+    { key: 'roleName', title: '角色名称' },
+    { key: 'roleKey', title: '权限字符' },
+    { key: 'roleSort', title: '显示顺序', width: '90px' },
+    { key: 'status', title: '状态', format: (_r, v) => this.dictService.label(this.statusOptions, v) },
+    { key: 'createTime', title: '创建时间', format: (_r, v) => this.parseTime(v) || '' },
+  ];
 
   modalVisible = false;
   modalTitle = '新增角色';
@@ -117,7 +127,7 @@ export class Role implements OnInit {
         this.total.set(page.total);
         this.loading.set(false);
         this.checkedIds.clear();
-        this.refreshChecked();
+        this.bt?.clearSelection();
       },
       error: () => this.loading.set(false),
     });
@@ -144,27 +154,7 @@ export class Role implements OnInit {
     this.getList();
   }
 
-  onItemChecked(id: number, checked: boolean): void {
-    if (checked) this.checkedIds.add(id);
-    else this.checkedIds.delete(id);
-    this.refreshChecked();
-  }
-
-  onAllChecked(checked: boolean): void {
-    this.list().forEach((r) => {
-      if (r.roleId !== 1) {
-        if (checked) this.checkedIds.add(r.roleId);
-        else this.checkedIds.delete(r.roleId);
-      }
-    });
-    this.refreshChecked();
-  }
-
-  refreshChecked(): void {
-    const enabled = this.list().filter((r) => r.roleId !== 1);
-    this.allChecked = enabled.length > 0 && enabled.every((r) => this.checkedIds.has(r.roleId));
-    this.indeterminate = enabled.some((r) => this.checkedIds.has(r.roleId)) && !this.allChecked;
-  }
+  onSelection(ids: Set<any>) { this.checkedIds = ids as Set<number>; }
 
   toMenuNodes(nodes: any[]): any[] {
     return (nodes || []).map((n) => ({

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -16,6 +16,10 @@ import { MenuApiService } from '../../../api/system/menu.api.service';
 import { DictService, DictOption } from '../../../api/dict.service';
 import { handleTree, parseTime } from '../../../util/ruoyi.util';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
+import { BuilderTable } from '../../../builder/builder-table/builder-table';
+import { BuilderTableColumn } from '../../../builder/builder-table/builder-table.model';
+import { BuilderForm } from '../../../builder/builder-form/builder-form';
+import { FormConfig } from '../../../builder/builder-form/builder-form.model';
 
 @Component({
   selector: 'app-menu',
@@ -31,13 +35,13 @@ import { HasPermiDirective } from '../../../auth/has-permi.directive';
     NzIconModule,
     NzRadioModule,
     NzInputNumberModule,
-    NzTreeSelectModule,
-    HasPermiDirective,
+    HasPermiDirective, BuilderTable, BuilderForm,
   ],
   templateUrl: './menu.html',
   styleUrl: './menu.less',
 })
 export class Menu implements OnInit {
+  @ViewChild('bf') bf?: BuilderForm;
   private menuApi = inject(MenuApiService);
   private dictService = inject(DictService);
   private message = inject(NzMessageService);
@@ -54,10 +58,20 @@ export class Menu implements OnInit {
   modalVisible = false;
   modalTitle = '新增菜单';
   submitting = false;
-  form: any = this.emptyForm();
+  formConfig: FormConfig = [];
   parentNodes: any[] = [];
+  editing: any = {};
 
   parseTime = parseTime;
+  columns: BuilderTableColumn[] = [
+    { key: 'menuName', title: '菜单名称' },
+    { key: 'icon', title: '图标', width: '80px' },
+    { key: 'orderNum', title: '排序', width: '70px' },
+    { key: 'perms', title: '权限标识' },
+    { key: 'component', title: '组件路径' },
+    { key: 'status', title: '状态', width: '80px', format: (_r, v) => this.statusLabel(v) },
+    { key: 'createTime', title: '创建时间', width: '160px', format: (_r, v) => this.parseTime(v) || '' },
+  ];
 
   ngOnInit(): void {
     this.dictService.getDict('sys_normal_disable').subscribe((d) => (this.statusOptions = d));
@@ -111,6 +125,8 @@ export class Menu implements OnInit {
         const data = handleTree(res?.data ?? [], 'menuId');
         const root = { title: '主类目', key: 0, value: 0, children: this.toTreeSelect(data, excludeId) };
         this.parentNodes = [root];
+        this.formConfig = this.buildFormConfig(this.editing);
+        this.modalVisible = true;
       },
     });
   }
@@ -127,12 +143,31 @@ export class Menu implements OnInit {
       }));
   }
 
+  private buildFormConfig(data: any): FormConfig {
+    const types = [{ label: '目录', value: 'M' }, { label: '菜单', value: 'C' }, { label: '按钮', value: 'F' }];
+    const yn = [{ label: '是', value: '0' }, { label: '否', value: '1' }];
+    return [
+      { name: 'parentId', component: 'tree-select', label: '上级菜单', defaultValue: data.parentId ?? 0, treeData: this.parentNodes },
+      { name: 'menuType', component: 'radio', label: '菜单类型', defaultValue: data.menuType ?? 'M', options: types },
+      { name: 'menuName', component: 'input', label: '菜单名称', rules: { required: true }, errorMessage: { required: '菜单名称不能为空' }, defaultValue: data.menuName ?? '' },
+      { name: 'icon', component: 'input', label: '菜单图标', defaultValue: data.icon ?? '', when: (f) => f.menuType !== 'F' },
+      { name: 'orderNum', component: 'number', label: '显示排序', rules: { required: true }, defaultValue: data.orderNum ?? 0, min: 0 },
+      { name: 'isFrame', component: 'radio', label: '是否外链', defaultValue: data.isFrame ?? '1', options: yn, when: (f) => f.menuType !== 'F' },
+      { name: 'path', component: 'input', label: '路由地址', defaultValue: data.path ?? '', when: (f) => f.menuType !== 'F' },
+      { name: 'component', component: 'input', label: '组件路径', defaultValue: data.component ?? '', when: (f) => f.menuType === 'C' },
+      { name: 'query', component: 'input', label: '路由参数', defaultValue: data.query ?? '', when: (f) => f.menuType === 'C' },
+      { name: 'isCache', component: 'radio', label: '是否缓存', defaultValue: data.isCache ?? '0', options: [{ label: '缓存', value: '0' }, { label: '不缓存', value: '1' }], when: (f) => f.menuType === 'C' },
+      { name: 'visible', component: 'radio', label: '显示状态', defaultValue: data.visible ?? '0', options: this.showHideOptions.map(d => ({ label: d.label, value: d.value })), when: (f) => f.menuType !== 'F' },
+      { name: 'perms', component: 'input', label: '权限标识', defaultValue: data.perms ?? '', when: (f) => f.menuType !== 'M' },
+      { name: 'status', component: 'radio', label: '菜单状态', defaultValue: data.status ?? '0', options: this.statusOptions.map(d => ({ label: d.label, value: d.value })) },
+    ];
+  }
+
   openAdd(row?: any): void {
-    this.form = this.emptyForm();
-    if (row?.menuId != null) this.form.parentId = row.menuId;
+    this.editing = this.emptyForm();
+    if (row?.menuId != null) this.editing.parentId = row.menuId;
     this.modalTitle = '新增菜单';
     this.loadParentOptions();
-    this.modalVisible = true;
   }
 
   openEdit(row: any): void {
@@ -140,7 +175,7 @@ export class Menu implements OnInit {
     this.menuApi.get(row.menuId).subscribe({
       next: (res) => {
         const m = res?.data ?? {};
-        this.form = {
+        this.editing = {
           menuId: m.menuId,
           parentId: m.parentId ?? 0,
           menuType: m.menuType ?? 'M',
@@ -157,22 +192,16 @@ export class Menu implements OnInit {
           status: m.status ?? '0',
         };
         this.loadParentOptions(m.menuId);
-        this.modalVisible = true;
       },
     });
   }
 
   submit(): void {
-    if (!this.form.menuName) {
-      this.message.warning('菜单名称不能为空');
-      return;
-    }
-    if (this.form.parentId == null) {
-      this.message.warning('请选择上级菜单');
-      return;
-    }
+    const bf = this.bf; if (!bf) return;
+    if (bf.validateForm.invalid) { bf.submitForm(); return; }
+    const value = { ...this.editing, ...bf.getRawValue() };
     this.submitting = true;
-    const req$ = this.form.menuId ? this.menuApi.update(this.form) : this.menuApi.add(this.form);
+    const req$ = value.menuId ? this.menuApi.update(value) : this.menuApi.add(value);
     req$.subscribe({
       next: () => {
         this.message.success('操作成功');

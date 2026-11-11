@@ -19,7 +19,7 @@ export type FormOption = { label: string; value: any };
 
 export type FormConfigItem = {
   name: string;
-  component: 'input' | 'select' | 'radio' | 'checkbox' | 'textarea' | 'password' | 'number' | 'editor' | 'custom';
+  component: 'input' | 'select' | 'radio' | 'checkbox' | 'checkbox-group' | 'textarea' | 'password' | 'number' | 'editor' | 'tree-select' | 'custom';
   customComponent?: Type<any>;
   label: string;
   placeholder?: string;
@@ -38,6 +38,10 @@ export type FormConfigItem = {
   max?: number;
   /** disable field */
   disabled?: boolean;
+  /** select mode */
+  mode?: 'default' | 'multiple';
+  /** nz-tree-select nodes */
+  treeData?: any[];
 };
 
 export type FormConfig = FormConfigItem[];

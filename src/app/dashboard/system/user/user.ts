@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -26,6 +26,10 @@ import { parsePage, parseTime } from '../../../util/ruoyi.util';
 import { DownloadService } from '../../../http/download.service';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
 import { Router } from '@angular/router';
+import { BuilderTable } from '../../../builder/builder-table/builder-table';
+import { BuilderTableColumn } from '../../../builder/builder-table/builder-table.model';
+import { BuilderForm } from '../../../builder/builder-form/builder-form';
+import { FormConfig } from '../../../builder/builder-form/builder-form.model';
 
 @Component({
   selector: 'app-user',
@@ -51,11 +55,15 @@ import { Router } from '@angular/router';
     HasPermiDirective,
     NzUploadModule,
     NzCheckboxModule,
+    BuilderTable,
+    BuilderForm,
   ],
   templateUrl: './user.html',
   styleUrl: './user.less',
 })
 export class User implements OnInit {
+  @ViewChild('bt') bt?: BuilderTable;
+  @ViewChild('bf') bf?: BuilderForm;
   private userApi = inject(UserApiService);
   private dictService = inject(DictService);
   private message = inject(NzMessageService);
@@ -86,15 +94,23 @@ export class User implements OnInit {
   };
 
   checkedIds = new Set<number>();
-  indeterminate = false;
-  allChecked = false;
 
   modalVisible = false;
   modalTitle = '新增用户';
   submitting = false;
-  form: any = this.emptyForm();
+  formConfig: FormConfig = [];
+  editingId?: number;
 
   parseTime = parseTime;
+  columns: BuilderTableColumn[] = [
+    { key: 'userId', title: '用户编号', width: '90px' },
+    { key: 'userName', title: '用户账号' },
+    { key: 'nickName', title: '用户昵称' },
+    { key: 'deptName', title: '部门', format: (r) => r.dept?.deptName || r.deptName || '' },
+    { key: 'phonenumber', title: '手机号码' },
+    { key: 'status', title: '状态', format: (_r, v) => this.statusLabel(v) },
+    { key: 'createTime', title: '创建时间', format: (_r, v) => this.parseTime(v) || '' },
+  ];
   importVisible = false;
   importSubmitting = false;
   updateSupport = false;
@@ -156,7 +172,7 @@ export class User implements OnInit {
         this.total.set(page.total);
         this.loading.set(false);
         this.checkedIds.clear();
-        this.refreshChecked();
+        this.bt?.clearSelection();
       },
       error: () => this.loading.set(false),
     });
@@ -189,35 +205,42 @@ export class User implements OnInit {
     this.getList();
   }
 
-  onItemChecked(id: number, checked: boolean): void {
-    if (checked) this.checkedIds.add(id);
-    else this.checkedIds.delete(id);
-    this.refreshChecked();
+  onSelection(ids: Set<any>) { this.checkedIds = ids as Set<number>; }
+
+  private treeSelectNodes(nodes: any[]): any[] {
+    return (nodes || []).map((n) => ({
+      title: n.title ?? n.label,
+      key: n.key ?? n.id,
+      value: n.key ?? n.id,
+      isLeaf: n.isLeaf,
+      children: n.children ? this.treeSelectNodes(n.children) : undefined,
+    }));
   }
 
-  onAllChecked(checked: boolean): void {
-    this.userList().forEach((u) => {
-      if (u.userId !== 1) {
-        if (checked) this.checkedIds.add(u.userId);
-        else this.checkedIds.delete(u.userId);
-      }
-    });
-    this.refreshChecked();
-  }
-
-  refreshChecked(): void {
-    const enabled = this.userList().filter((u) => u.userId !== 1);
-    this.allChecked = enabled.length > 0 && enabled.every((u) => this.checkedIds.has(u.userId));
-    this.indeterminate = enabled.some((u) => this.checkedIds.has(u.userId)) && !this.allChecked;
+  private buildFormConfig(data: any): FormConfig {
+    return [
+      { name: 'userName', component: 'input', label: '用户账号', rules: { required: true }, errorMessage: { required: '用户账号不能为空' }, defaultValue: data.userName ?? '', when: () => !this.editingId },
+      { name: 'password', component: 'password', label: '用户密码', rules: { required: true, minlength: 5 }, errorMessage: { required: '用户密码不能为空' }, defaultValue: '', when: () => !this.editingId },
+      { name: 'nickName', component: 'input', label: '用户昵称', rules: { required: true }, errorMessage: { required: '用户昵称不能为空' }, defaultValue: data.nickName ?? '' },
+      { name: 'deptId', component: 'tree-select', label: '归属部门', placeholder: '请选择归属部门', defaultValue: data.deptId, treeData: this.treeSelectNodes(this.deptNodes()) },
+      { name: 'phonenumber', component: 'input', label: '手机号码', defaultValue: data.phonenumber ?? '' },
+      { name: 'email', component: 'input', label: '邮箱', defaultValue: data.email ?? '' },
+      { name: 'sex', component: 'select', label: '用户性别', defaultValue: data.sex ?? '0', options: this.sexOptions.map(d => ({ label: d.label, value: d.value })) },
+      { name: 'status', component: 'radio', label: '状态', defaultValue: data.status ?? '0', options: this.statusOptions.map(d => ({ label: d.label, value: d.value })) },
+      { name: 'postIds', component: 'select', label: '岗位', mode: 'multiple', placeholder: '请选择', defaultValue: data.postIds ?? [], options: this.postOptions.map(p => ({ label: p.postName, value: p.postId })) },
+      { name: 'roleIds', component: 'select', label: '角色', mode: 'multiple', placeholder: '请选择', defaultValue: data.roleIds ?? [], options: this.roleOptions.map(r => ({ label: r.roleName, value: r.roleId })) },
+      { name: 'remark', component: 'textarea', label: '备注', defaultValue: data.remark ?? '', rows: 3 },
+    ];
   }
 
   openAdd(): void {
-    this.form = this.emptyForm();
+    this.editingId = undefined;
     this.modalTitle = '新增用户';
     this.userApi.getPostsAndRoles().subscribe({
       next: (res) => {
         this.postOptions = res?.data?.posts ?? [];
         this.roleOptions = res?.data?.roles ?? [];
+        this.formConfig = this.buildFormConfig(this.emptyForm());
         this.modalVisible = true;
       },
     });
@@ -233,11 +256,11 @@ export class User implements OnInit {
         const u = wrap.data ?? {};
         this.postOptions = wrap.posts ?? [];
         this.roleOptions = wrap.roles ?? [];
-        this.form = {
+        this.editingId = u.userId;
+        this.formConfig = this.buildFormConfig({
           userId: u.userId,
           userName: u.userName,
           nickName: u.nickName,
-          password: '',
           deptId: u.deptId,
           phonenumber: u.phonenumber,
           email: u.email,
@@ -246,30 +269,33 @@ export class User implements OnInit {
           postIds: (wrap.postIds ?? []).map(Number),
           roleIds: (wrap.roleIds ?? []).map(Number),
           remark: u.remark ?? '',
-        };
+        });
         this.modalVisible = true;
       },
     });
   }
 
   submit(): void {
-    if (!this.form.nickName) {
+    const bf = this.bf; if (!bf) return;
+    if (bf.validateForm.invalid) { bf.submitForm(); return; }
+    const form = { ...bf.getRawValue(), userId: this.editingId };
+    if (!form.nickName) {
       this.message.warning('用户昵称不能为空');
       return;
     }
-    if (!this.form.userId) {
-      if (!this.form.userName) {
+    if (!form.userId) {
+      if (!form.userName) {
         this.message.warning('用户账号不能为空');
         return;
       }
-      if (!this.form.password || this.form.password.length < 5) {
+      if (!form.password || form.password.length < 5) {
         this.message.warning('用户密码长度必须介于 5 和 20 之间');
         return;
       }
     }
     this.submitting = true;
-    const payload = { ...this.form };
-    const req$ = this.form.userId ? this.userApi.update(payload) : this.userApi.add(payload);
+    const payload = { ...form };
+    const req$ = form.userId ? this.userApi.update(payload) : this.userApi.add(payload);
     req$.subscribe({
       next: () => {
         this.message.success('操作成功');

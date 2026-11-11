@@ -18,21 +18,21 @@
     <button *hasPermi="['monitor:logininfor:unlock']" nz-button [disabled]="checkedIds.size!==1" (click)="unlockSelected()"><span nz-icon nzType="unlock"></span>解锁</button>
     <button *hasPermi="['monitor:logininfor:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
   </div>
-  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
-    <thead><tr>
-      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
-      <th>访问编号</th><th>用户名称</th><th>地址</th><th>登录地点</th><th>浏览器</th><th>操作系统</th><th>登录状态</th><th>描述</th><th>访问时间</th><th nzWidth="80px">操作</th>
-    </tr></thead>
-    <tbody>
-      @for (row of t.data; track row.infoId) {
-        <tr>
-          <td [nzChecked]="checkedIds.has(row.infoId)" (nzCheckedChange)="onItemChecked(row.infoId,$event)"></td>
-          <td>{{ row.infoId }}</td><td>{{ row.userName }}</td><td>{{ row.ipaddr }}</td><td>{{ row.loginLocation }}</td>
-          <td>{{ row.browser }}</td><td>{{ row.os }}</td><td>{{ statusLabel(row.status) }}</td><td>{{ row.msg }}</td>
-          <td>{{ parseTime(row.loginTime) }}</td>
-          <td><a *hasPermi="['monitor:logininfor:unlock']" (click)="unlock(row)">解锁</a></td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <app-builder-table
+    #bt
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [total]="total()"
+    [pageIndex]="query.pageNum"
+    [pageSize]="query.pageSize"
+    rowKey="infoId"
+    (pageIndexChange)="onPageIndexChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (selectionChange)="onSelection($event)"
+  >
+    <ng-template #actions let-row>
+      <a *hasPermi="['monitor:logininfor:unlock']" (click)="unlock(row)">解锁</a>
+    </ng-template>
+  </app-builder-table>
 </div>

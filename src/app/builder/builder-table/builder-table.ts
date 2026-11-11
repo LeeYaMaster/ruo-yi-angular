@@ -29,6 +29,12 @@ export class BuilderTable {
   @Input() bordered = true;
   @Input() size: 'small' | 'middle' | 'default' = 'middle';
   @Input() actionWidth = '140px';
+  /** render nested children with indent (dept/menu) */
+  @Input() tree = false;
+  @Input() childrenKey = 'children';
+  @Input() showPagination = true;
+  @Input() expandAll = true;
+  @Input() scrollX?: string;
 
   @Output() pageIndexChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();

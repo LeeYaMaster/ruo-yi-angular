@@ -23,44 +23,36 @@
     <button *hasPermi="['monitor:job:query']" nz-button (click)="goJobLog()"><span nz-icon nzType="file-text"></span>日志</button>
     <button *hasPermi="['monitor:job:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
   </div>
-  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle">
-    <thead><tr>
-      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
-      <th>任务编号</th><th>任务名称</th><th>任务组名</th><th>调用目标</th><th>cron</th><th>状态</th><th nzWidth="180px">操作</th>
-    </tr></thead>
-    <tbody>
-      @for (row of t.data; track row.jobId) {
-        <tr>
-          <td [nzChecked]="checkedIds.has(row.jobId)" (nzCheckedChange)="onItemChecked(row.jobId,$event)"></td>
-          <td>{{ row.jobId }}</td><td>{{ row.jobName }}</td><td>{{ groupLabel(row.jobGroup) }}</td>
-          <td>{{ row.invokeTarget }}</td><td>{{ row.cronExpression }}</td>
-          <td><nz-switch [ngModel]="row.status==='0'" (ngModelChange)="onStatusChange(row,$event)"></nz-switch></td>
-          <td>
-            <a *hasPermi="['monitor:job:edit']" (click)="openEdit(row)">修改</a><span class="sep">|</span>
-            <a *hasPermi="['monitor:job:remove']" (click)="remove(row)">删除</a><span class="sep">|</span>
-            <a *hasPermi="['monitor:job:changeStatus']" (click)="run(row)">执行一次</a><span class="sep">|</span>
-            <a *hasPermi="['monitor:job:query']" (click)="goJobLog(row)">日志</a>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <app-builder-table
+    #bt
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [total]="total()"
+    [pageIndex]="query.pageNum"
+    [pageSize]="query.pageSize"
+    rowKey="jobId"
+    actionWidth="220px"
+    (pageIndexChange)="onPageIndexChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (selectionChange)="onSelection($event)"
+  >
+    <ng-template #actions let-row>
+      <a *hasPermi="['monitor:job:edit']" (click)="openEdit(row)">修改</a><span class="sep">|</span>
+      <a *hasPermi="['monitor:job:remove']" (click)="remove(row)">删除</a><span class="sep">|</span>
+      <a *hasPermi="['monitor:job:changeStatus']" (click)="run(row)">执行一次</a><span class="sep">|</span>
+      <a *hasPermi="['monitor:job:query']" (click)="goJobLog(row)">日志</a>
+    </ng-template>
+  </app-builder-table>
 </div>
-<nz-modal [(nzVisible)]="modalVisible" [nzTitle]="modalTitle" [nzWidth]="680" [nzOkLoading]="submitting" (nzOnCancel)="modalVisible=false" (nzOnOk)="submit()">
+<nz-modal [(nzVisible)]="modalVisible" [nzTitle]="modalTitle" [nzWidth]="680" [nzFooter]="modalFooter" (nzOnCancel)="modalVisible=false">
   <ng-container *nzModalContent>
-    <form nz-form >
-      <nz-form-item><nz-form-label nzRequired>任务名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.jobName" name="jobName" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label nzRequired>任务分组</nz-form-label><nz-form-control>
-        <nz-select [(ngModel)]="form.jobGroup" name="jobGroup" style="width:100%">
-          @for (d of groupOptions; track d.value) { <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option> }
-        </nz-select>
-      </nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label nzRequired>调用目标</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.invokeTarget" name="invokeTarget" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label nzRequired>cron表达式</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.cronExpression" name="cronExpression" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>状态</nz-form-label><nz-form-control>
-        <nz-radio-group [(ngModel)]="form.status" name="status">@for (d of statusOptions; track d.value){<label nz-radio [nzValue]="d.value">{{d.label}}</label>}</nz-radio-group>
-      </nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>备注</nz-form-label><nz-form-control><textarea nz-input [(ngModel)]="form.remark" name="remark" rows="2"></textarea></nz-form-control></nz-form-item>
-    </form>
+    @if (modalVisible) {
+      <app-builder-form #bf layout="vertical" [showSubmit]="false" [formConfig]="formConfig"></app-builder-form>
+    }
   </ng-container>
 </nz-modal>
+<ng-template #modalFooter>
+  <button nz-button (click)="modalVisible=false">取 消</button>
+  <button nz-button nzType="primary" [nzLoading]="submitting" (click)="submit()">确 定</button>
+</ng-template>

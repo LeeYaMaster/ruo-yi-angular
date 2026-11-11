@@ -23,6 +23,7 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzTreeSelectModule } from 'ng-zorro-antd/tree-select';
 import { ErrorMessage, FormConfig, GroupValidator, RulesKey } from './builder-form.model';
 import { CommonModule } from '@angular/common';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
@@ -42,6 +43,7 @@ import { RichEditor } from '../../shared/rich-editor/rich-editor';
     NzInputNumberModule,
     NzIconModule,
     NzGridModule,
+    NzTreeSelectModule,
     CommonModule,
     RichEditor,
   ],
@@ -98,7 +100,7 @@ export class BuilderForm implements OnChanges {
         Object.entries(item.rules ?? {}).map(([key, value]) => this.getRuleValidator(key, value)) ||
         [];
       const ctrl = this.fb.control(
-        { value: item.defaultValue ?? (item.component === 'number' ? 0 : ''), disabled: !!item.disabled },
+        { value: item.defaultValue ?? this.defaultFor(item.component), disabled: !!item.disabled },
         validators.flat()
       );
       next.addControl(item.name, ctrl);
@@ -157,6 +159,31 @@ export class BuilderForm implements OnChanges {
       return [Validators.nullValidator];
     }
     return validators.length ? validators : [Validators.nullValidator];
+  }
+
+
+  private defaultFor(component: string): any {
+    if (component === 'number') return 0;
+    if (component === 'checkbox-group' || (component === 'select')) {
+      return component === 'checkbox-group' ? [] : '';
+    }
+    return '';
+  }
+
+  isGroupChecked(name: string, value: any): boolean {
+    const v = this.validateForm.get(name)?.value;
+    return Array.isArray(v) && v.some((x) => String(x) === String(value));
+  }
+
+  toggleGroupValue(name: string, value: any, checked: boolean): void {
+    const ctrl = this.validateForm.get(name);
+    if (!ctrl) return;
+    const arr = Array.isArray(ctrl.value) ? [...ctrl.value] : [];
+    const idx = arr.findIndex((x) => String(x) === String(value));
+    if (checked && idx < 0) arr.push(value);
+    if (!checked && idx >= 0) arr.splice(idx, 1);
+    ctrl.setValue(arr);
+    ctrl.markAsDirty();
   }
 
   /** Patch values after open edit modal */

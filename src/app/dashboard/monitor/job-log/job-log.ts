@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,14 +15,17 @@ import { DictService, DictOption } from '../../../api/dict.service';
 import { HasPermiDirective } from '../../../auth/has-permi.directive';
 import { DownloadService } from '../../../http/download.service';
 import { parsePage, parseTime } from '../../../util/ruoyi.util';
+import { BuilderTable } from '../../../builder/builder-table/builder-table';
+import { BuilderTableColumn } from '../../../builder/builder-table/builder-table.model';
 
 @Component({
   selector: 'app-job-log',
-  imports: [CommonModule, FormsModule, NzTableModule, NzButtonModule, NzInputModule, NzSelectModule, NzFormModule, NzModalModule, NzIconModule, HasPermiDirective],
+  imports: [CommonModule, FormsModule, NzButtonModule, NzInputModule, NzSelectModule, NzFormModule, NzModalModule, NzIconModule, HasPermiDirective, BuilderTable],
   templateUrl: './job-log.html',
   styleUrl: './job-log.less',
 })
 export class JobLog implements OnInit {
+  @ViewChild('bt') bt?: BuilderTable;
   private api = inject(JobLogApiService);
   private dict = inject(DictService);
   private message = inject(NzMessageService);
@@ -47,8 +50,15 @@ export class JobLog implements OnInit {
   detail: any = {};
   parseTime = parseTime;
   checkedIds = new Set<number>();
-  allChecked = false;
-  indeterminate = false;
+  columns: BuilderTableColumn[] = [
+    { key: 'jobLogId', title: '日志编号', width: '90px' },
+    { key: 'jobName', title: '任务名称' },
+    { key: 'jobGroup', title: '任务组名', format: (_r, v) => this.groupLabel(v) },
+    { key: 'invokeTarget', title: '调用目标' },
+    { key: 'jobMessage', title: '日志信息' },
+    { key: 'status', title: '执行状态', format: (_r, v) => this.statusLabel(v) },
+    { key: 'createTime', title: '执行时间', format: (_r, v) => this.parseTime(v) || '' },
+  ];
 
   ngOnInit(): void {
     const jobName = this.route.snapshot.queryParamMap.get('jobName');
@@ -68,6 +78,8 @@ export class JobLog implements OnInit {
         this.list.set(p.list);
         this.total.set(p.total);
         this.loading.set(false);
+        this.checkedIds.clear();
+        this.bt?.clearSelection();
       },
       error: () => this.loading.set(false),
     });
@@ -82,14 +94,7 @@ export class JobLog implements OnInit {
   onPageSizeChange(s: number): void { this.query.pageSize = s; this.query.pageNum = 1; this.getList(); }
 
 
-  onItemChecked(id: number, c: boolean) { c ? this.checkedIds.add(id) : this.checkedIds.delete(id); this.refreshChecked(); }
-  onAllChecked(c: boolean) { this.list().forEach(r => c ? this.checkedIds.add(r.jobLogId) : this.checkedIds.delete(r.jobLogId)); this.refreshChecked(); }
-  refreshChecked() {
-    const n = this.list().length;
-    const c = this.list().filter(r => this.checkedIds.has(r.jobLogId)).length;
-    this.allChecked = n > 0 && c === n;
-    this.indeterminate = c > 0 && c < n;
-  }
+  onSelection(ids: Set<any>) { this.checkedIds = ids as Set<number>; }
 
   remove(row?: any): void {
     const ids = row ? String(row.jobLogId) : [...this.checkedIds].join(',');

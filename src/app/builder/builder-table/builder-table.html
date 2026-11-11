@@ -6,9 +6,11 @@
   [nzTotal]="total"
   [nzPageIndex]="pageIndex"
   [nzPageSize]="pageSize"
-  [nzShowSizeChanger]="true"
+  [nzShowPagination]="showPagination"
+  [nzShowSizeChanger]="showPagination"
   [nzBordered]="bordered"
   [nzSize]="size"
+  [nzScroll]="scrollX ? { x: scrollX } : {}"
   (nzPageIndexChange)="pageIndexChange.emit($event)"
   (nzPageSizeChange)="pageSizeChange.emit($event)"
   (nzCurrentPageDataChange)="onCurrentPageDataChange($event)"
@@ -31,23 +33,53 @@
     </tr>
   </thead>
   <tbody>
-    @for (row of tbl.data; track trackRow($index, row)) {
-      <tr>
-        @if (showCheckbox) {
-          <td
-            [nzChecked]="setOfCheckedId.has(row[rowKey])"
-            (nzCheckedChange)="onItemChecked(row[rowKey], $event)"
-          ></td>
-        }
-        @for (col of columns; track col.key) {
-          <td [nzAlign]="col.align || null">{{ cellValue(row, col) }}</td>
-        }
-        @if (actionsTpl) {
-          <td>
-            <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
-          </td>
-        }
-      </tr>
+    @if (!tree) {
+      @for (row of tbl.data; track trackRow($index, row)) {
+        <tr>
+          @if (showCheckbox) {
+            <td
+              [nzChecked]="setOfCheckedId.has(row[rowKey])"
+              (nzCheckedChange)="onItemChecked(row[rowKey], $event)"
+            ></td>
+          }
+          @for (col of columns; track col.key) {
+            <td [nzAlign]="col.align || null">{{ cellValue(row, col) }}</td>
+          }
+          @if (actionsTpl) {
+            <td>
+              <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
+            </td>
+          }
+        </tr>
+      }
+    } @else {
+      <ng-container *ngTemplateOutlet="treeRows; context: { $implicit: data, level: 0 }"></ng-container>
     }
   </tbody>
 </nz-table>
+
+<ng-template #treeRows let-items let-level="level">
+  @for (row of items; track trackRow($index, row)) {
+    <tr>
+      @if (showCheckbox) {
+        <td
+          [nzChecked]="setOfCheckedId.has(row[rowKey])"
+          (nzCheckedChange)="onItemChecked(row[rowKey], $event)"
+        ></td>
+      }
+      @for (col of columns; track col.key; let i = $index) {
+        <td [nzAlign]="col.align || null" [style.paddingLeft.px]="i === 0 ? 12 + level * 18 : null">
+          {{ cellValue(row, col) }}
+        </td>
+      }
+      @if (actionsTpl) {
+        <td>
+          <ng-container *ngTemplateOutlet="actionsTpl; context: { $implicit: row }"></ng-container>
+        </td>
+      }
+    </tr>
+    @if (expandAll && row[childrenKey]?.length) {
+      <ng-container *ngTemplateOutlet="treeRows; context: { $implicit: row[childrenKey], level: level + 1 }"></ng-container>
+    }
+  }
+</ng-template>

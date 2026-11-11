@@ -9,5 +9,6 @@
     [readOnly]="readOnly || disabled"
     [styles]="{ minHeight: minHeight + 'px' }"
     (onBlur)="onBlur()"
+    (onEditorCreated)="onEditorCreated($event)"
   ></quill-editor>
 </div>

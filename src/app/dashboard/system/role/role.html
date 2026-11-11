@@ -35,67 +35,33 @@
     <button *hasPermi="['system:role:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
   </div>
 
-  <nz-table
-    #roleTable
-    [nzData]="list()"
-    [nzLoading]="loading()"
-    [nzFrontPagination]="false"
-    [nzTotal]="total()"
-    [nzPageIndex]="query.pageNum"
-    [nzPageSize]="query.pageSize"
-    [nzShowSizeChanger]="true"
-    (nzPageIndexChange)="onPageIndexChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzBordered
-    nzSize="middle"
+  <app-builder-table
+    #bt
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [total]="total()"
+    [pageIndex]="query.pageNum"
+    [pageSize]="query.pageSize"
+    rowKey="roleId"
+    actionWidth="260px"
+    (pageIndexChange)="onPageIndexChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (selectionChange)="onSelection($event)"
   >
-    <thead>
-      <tr>
-        <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
-        <th>角色编号</th>
-        <th>角色名称</th>
-        <th>权限字符</th>
-        <th>显示顺序</th>
-        <th>状态</th>
-        <th>创建时间</th>
-        <th nzWidth="160px">操作</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (row of roleTable.data; track row.roleId) {
-        <tr>
-          <td
-            [nzChecked]="checkedIds.has(row.roleId)"
-            [nzDisabled]="row.roleId === 1"
-            (nzCheckedChange)="onItemChecked(row.roleId, $event)"
-          ></td>
-          <td>{{ row.roleId }}</td>
-          <td>{{ row.roleName }}</td>
-          <td>{{ row.roleKey }}</td>
-          <td>{{ row.roleSort }}</td>
-          <td>
-            <nz-switch
-              [ngModel]="row.status === '0'"
-              (ngModelChange)="onStatusChange(row, $event)"
-              [nzDisabled]="row.roleId === 1"
-            ></nz-switch>
-          </td>
-          <td>{{ parseTime(row.createTime) }}</td>
-          <td>
-            @if (row.roleId !== 1) {
-              <a *hasPermi="['system:role:edit']" (click)="openEdit(row)">修改</a>
-              <span class="sep">|</span>
-              <a *hasPermi="['system:role:remove']" (click)="remove(row)">删除</a>
-              <span class="sep">|</span>
-              <a *hasPermi="['system:role:edit']" (click)="openDataScope(row)">数据权限</a>
-              <span class="sep">|</span>
-              <a *hasPermi="['system:role:edit']" (click)="goAuthUser(row)">分配用户</a>
-            }
-          </td>
-        </tr>
+    <ng-template #actions let-row>
+      @if (row.roleId !== 1) {
+        <a *hasPermi="['system:role:edit']" (click)="openEdit(row)">修改</a>
+        <span class="sep">|</span>
+        <a *hasPermi="['system:role:remove']" (click)="remove(row)">删除</a>
+        <span class="sep">|</span>
+        <a *hasPermi="['system:role:edit']" (click)="openDataScope(row)">数据权限</a>
+        <span class="sep">|</span>
+        <a *hasPermi="['system:role:edit']" (click)="goAuthUser(row)">分配用户</a>
       }
-    </tbody>
-  </nz-table>
+    </ng-template>
+  </app-builder-table>
+
 </div>
 
 <nz-modal

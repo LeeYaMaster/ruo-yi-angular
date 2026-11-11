@@ -15,47 +15,32 @@
     <button *hasPermi="['system:dept:add']" nz-button nzType="primary" (click)="openAdd()"><span nz-icon nzType="plus"></span>新增</button>
     <button nz-button (click)="expandAll = !expandAll">展开/折叠</button>
   </div>
-  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" nzBordered nzSize="middle">
-    <thead><tr><th>部门名称</th><th>排序</th><th>状态</th><th>创建时间</th><th nzWidth="200px">操作</th></tr></thead>
-    <tbody>
-      <ng-container *ngTemplateOutlet="rows; context: { $implicit: t.data, level: 0 }"></ng-container>
-    </tbody>
-  </nz-table>
+  <app-builder-table
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [tree]="true"
+    [expandAll]="expandAll"
+    [showPagination]="false"
+    [showCheckbox]="false"
+    rowKey="deptId"
+    actionWidth="200px"
+  >
+    <ng-template #actions let-row>
+      <a *hasPermi="['system:dept:edit']" (click)="openEdit(row)">修改</a><span class="sep">|</span>
+      <a *hasPermi="['system:dept:add']" (click)="openAdd(row)">新增</a><span class="sep">|</span>
+      <a *hasPermi="['system:dept:remove']" (click)="remove(row)">删除</a>
+    </ng-template>
+  </app-builder-table>
 </div>
-<ng-template #rows let-items let-level="level">
-  @for (row of items; track row.deptId) {
-    <tr>
-      <td [style.paddingLeft.px]="12 + level * 18">{{ row.deptName }}</td>
-      <td>{{ row.orderNum }}</td>
-      <td>{{ statusLabel(row.status) }}</td>
-      <td>{{ parseTime(row.createTime) }}</td>
-      <td>
-        <a *hasPermi="['system:dept:edit']" (click)="openEdit(row)">修改</a><span class="sep">|</span>
-        <a *hasPermi="['system:dept:add']" (click)="openAdd(row)">新增</a><span class="sep">|</span>
-        <a *hasPermi="['system:dept:remove']" (click)="remove(row)">删除</a>
-      </td>
-    </tr>
-    @if (expandAll && row.children?.length) {
-      <ng-container *ngTemplateOutlet="rows; context: { $implicit: row.children, level: level + 1 }"></ng-container>
-    }
-  }
-</ng-template>
-<nz-modal [(nzVisible)]="modalVisible" [nzTitle]="modalTitle" [nzOkLoading]="submitting" (nzOnCancel)="modalVisible=false" (nzOnOk)="submit()">
+<nz-modal [(nzVisible)]="modalVisible" [nzTitle]="modalTitle" [nzFooter]="modalFooter" (nzOnCancel)="modalVisible=false">
   <ng-container *nzModalContent>
-    <form nz-form >
-      <nz-form-item><nz-form-label>上级部门</nz-form-label><nz-form-control>
-        <nz-tree-select style="width:100%" [nzNodes]="parentNodes" [(ngModel)]="form.parentId" name="parentId" nzDefaultExpandAll></nz-tree-select>
-      </nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label nzRequired>部门名称</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.deptName" name="deptName" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label nzRequired>显示排序</nz-form-label><nz-form-control><nz-input-number [(ngModel)]="form.orderNum" name="orderNum" [nzMin]="0" style="width:100%"></nz-input-number></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>负责人</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.leader" name="leader" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>联系电话</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.phone" name="phone" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>邮箱</nz-form-label><nz-form-control><input nz-input [(ngModel)]="form.email" name="email" /></nz-form-control></nz-form-item>
-      <nz-form-item><nz-form-label>部门状态</nz-form-label><nz-form-control>
-        <nz-radio-group [(ngModel)]="form.status" name="status">
-          @for (d of statusOptions; track d.value) { <label nz-radio [nzValue]="d.value">{{ d.label }}</label> }
-        </nz-radio-group>
-      </nz-form-control></nz-form-item>
-    </form>
+    @if (modalVisible) {
+      <app-builder-form #bf layout="vertical" [showSubmit]="false" [formConfig]="formConfig"></app-builder-form>
+    }
   </ng-container>
 </nz-modal>
+<ng-template #modalFooter>
+  <button nz-button (click)="modalVisible=false">取 消</button>
+  <button nz-button nzType="primary" [nzLoading]="submitting" (click)="submit()">确 定</button>
+</ng-template>

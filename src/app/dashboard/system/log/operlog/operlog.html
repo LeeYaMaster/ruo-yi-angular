@@ -17,23 +17,24 @@
     <button *hasPermi="['monitor:operlog:remove']" nz-button nzDanger (click)="clean()"><span nz-icon nzType="delete"></span>清空</button>
     <button *hasPermi="['monitor:operlog:export']" nz-button (click)="export()"><span nz-icon nzType="download"></span>导出</button>
   </div>
-  <nz-table #t [nzData]="list()" [nzLoading]="loading()" [nzFrontPagination]="false" [nzTotal]="total()" [nzPageIndex]="query.pageNum" [nzPageSize]="query.pageSize" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageIndexChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzBordered nzSize="middle" [nzScroll]="{ x: '1200px' }">
-    <thead><tr>
-      <th [nzChecked]="allChecked" [nzIndeterminate]="indeterminate" (nzCheckedChange)="onAllChecked($event)"></th>
-      <th>日志编号</th><th>系统模块</th><th>操作类型</th><th>操作人员</th><th>操作地址</th><th>操作状态</th><th>操作日期</th><th nzWidth="80px">操作</th>
-    </tr></thead>
-    <tbody>
-      @for (row of t.data; track row.operId) {
-        <tr>
-          <td [nzChecked]="checkedIds.has(row.operId)" (nzCheckedChange)="onItemChecked(row.operId,$event)"></td>
-          <td>{{ row.operId }}</td><td>{{ row.title }}</td><td>{{ typeLabel(row.businessType) }}</td>
-          <td>{{ row.operName }}</td><td>{{ row.operIp }}</td><td>{{ statusLabel(row.status) }}</td>
-          <td>{{ parseTime(row.operTime) }}</td>
-          <td><a *hasPermi="['monitor:operlog:query']" (click)="showDetail(row)">详细</a></td>
-        </tr>
-      }
-    </tbody>
-  </nz-table>
+  <app-builder-table
+    #bt
+    [columns]="columns"
+    [data]="list()"
+    [loading]="loading()"
+    [total]="total()"
+    [pageIndex]="query.pageNum"
+    [pageSize]="query.pageSize"
+    rowKey="operId"
+    scrollX="1200px"
+    (pageIndexChange)="onPageIndexChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+    (selectionChange)="onSelection($event)"
+  >
+    <ng-template #actions let-row>
+      <a *hasPermi="['monitor:operlog:query']" (click)="showDetail(row)">详细</a>
+    </ng-template>
+  </app-builder-table>
 </div>
 <nz-modal [(nzVisible)]="detailVisible" nzTitle="操作日志详细" [nzFooter]="null" (nzOnCancel)="detailVisible=false" [nzWidth]="700">
   <ng-container *nzModalContent>
